@@ -7,7 +7,7 @@ An attempt at an IRC bot ft. fish
 
 Perhaps I should just make a repo for fish.
 
-Also big credits to the PircBot guy for making PircBot. Jibble or something. Jibble made PircBot.
+Also big, fat, crunchy credits to the PircBot guy for making PircBot. Jibble or something. Jibble made PircBot.
 
 http://www.jibble.org/pircbot.php
 
