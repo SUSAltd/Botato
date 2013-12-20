@@ -98,7 +98,7 @@ public class TestBot extends PircBot {
 
 		if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
 			newName = fishSolver.generate("<fish_big>", 1)[0];
-		} else if (newFish.weight() < Fish.MEAN_WEIGHT - 2
+		} else if (newFish.weight() < Fish.MEAN_WEIGHT - 1.5
 				* Fish.STD_DEV_WEIGHT) {
 			newName = fishSolver.generate("<fish_sml>", 1)[0];
 		} else {
