@@ -5,7 +5,9 @@ import java.io.*;
 public class TestBot extends PircBot {
 	Scanner input;
 	PrintStream output;
-	Random rand;
+	static Random rand;
+	
+	static String currentFisher;
 
 	String fishListFile;
 	String fishOutFile;
@@ -13,18 +15,20 @@ public class TestBot extends PircBot {
 	GrammarSolver fishSolver;
 	FishManager fishManager;
 
-	public TestBot(String fishListFile) throws IOException {
+	public TestBot(File fishListFile) throws IOException {
 		rand = new Random();
 
 		// initializes fish
 		List<Fish> fishList = new ArrayList<Fish>();
 		fishData = new File("data/fishdata.csv");
 		if (!fishData.createNewFile()) {
+			// get the fish from the file (skip first line for headers)
 			input = new Scanner(fishData);
 			String[] line;
-			input.nextLine(); // skips first line (headers)
+			input.nextLine();
 			while (input.hasNextLine()) {
-				line = input.nextLine().split(","); // [dateCaught,catcher,name,weight]
+				// line[] format = [dateCaught, catcher, name, weight]
+				line = input.nextLine().split(",");
 				for (int i = 0; i < line.length; i++) {
 					String s = line[i];
 					if (s.startsWith("\"") && s.endsWith("\"")) {
@@ -38,7 +42,8 @@ public class TestBot extends PircBot {
 		}
 		fishManager = new FishManager(fishList);
 
-		input = new Scanner(new File(fishListFile));
+		// create the fish grammar
+		input = new Scanner(fishListFile);
 
 		List<String> fishGrammar = new ArrayList<String>();
 		while (input.hasNextLine()) {
@@ -49,7 +54,6 @@ public class TestBot extends PircBot {
 		}
 		fishSolver = new GrammarSolver(
 				Collections.unmodifiableList(fishGrammar));
-
 	}
 
 	public void onKick(String channel, String kickerNick, String kickerLogin,
@@ -91,11 +95,39 @@ public class TestBot extends PircBot {
 		}
 	}
 
+	private class FishTimer implements Runnable {
+		
+		String channel;
+		String sender;
+		String message;
+		
+		public FishTimer(String channel, String sender) {
+			channel = this.channel;
+			sender = this.sender;
+		}
+		
+		@Override
+		public void run() {
+			try {
+				// pause for 1 - 60 seconds
+				Thread.sleep((1 + rand.nextInt(59)) * 1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				sendMessage(channel, "Something interrupted your fishing. How rude.");
+			}
+			
+			sendMessage(channel, "A fish is on the line, " + currentFisher + ". " + 
+					Colors.BOLD + Colors.DARK_BLUE + "!reel " + Colors.NORMAL + "it in!");
+		}
+		
+	}
+	
 	private void fish(String channel, String sender, String message)
 			throws FileNotFoundException {
 		Fish newFish = new Fish("temp", sender);
 		String newName;
 
+		// decide what adjective to attach to the fish
 		if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
 			newName = fishSolver.generate("<fish_big>", 1)[0];
 		} else if (newFish.weight() < Fish.MEAN_WEIGHT - 1.5
@@ -127,6 +159,12 @@ public class TestBot extends PircBot {
 		if (place <= 10) {
 			sendMessage(channel, newFish.catcher() + "'s " + newFish.name() + 
 					" broke the nr " + place + " record weight!");
+		}
+	}
+	
+	private void reel(String channel, String sender, String message) {
+		if (sender.equals(currentFisher)) {
+			
 		}
 	}
 	
@@ -214,7 +252,7 @@ public class TestBot extends PircBot {
 					+ "was not found in bot.ini.");
 		}
 
-		TestBot bot = new TestBot(fishList);
+		TestBot bot = new TestBot(new File(fishList));
 		bot.setVerbose(true);
 		bot.setName(p.getProperty("nick"));
 		bot.connect(p.getProperty("server"));
