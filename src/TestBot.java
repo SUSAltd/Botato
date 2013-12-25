@@ -5,10 +5,13 @@ import java.io.*;
 public class TestBot extends PircBot {
 	Scanner input;
 	PrintStream output;
-	static Random rand;
+	Random rand;
 	
-	static String currentFisher;
-
+	String currentFisher;
+	FishTimer fishTimer;
+	ReelTimer reelTimer;
+	Fish lastFish;
+	
 	String fishListFile;
 	String fishOutFile;
 	File fishData;
@@ -70,12 +73,16 @@ public class TestBot extends PircBot {
 				try {
 					fish(channel, sender, message);
 				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
+					sendMessage(channel, "SUSAltd: " +
+							"you did something wrong and I am disappointed.");
 				}
 			} else {
 				sendNotice(sender, "The fish aren't biting right now!");
 			}
+			
+		} else if (message.equals("!reel")) {
+			reel(channel, sender, message);
 			
 		// !fishstats
 		} else if (message.startsWith("!fishstats")) {
@@ -94,36 +101,86 @@ public class TestBot extends PircBot {
 			sendAction(channel, "botate botate botate");
 		}
 	}
-
+	
 	private class FishTimer implements Runnable {
 		
 		String channel;
 		String sender;
-		String message;
+		Fish newFish;
+		boolean running;
 		
 		public FishTimer(String channel, String sender) {
-			channel = this.channel;
-			sender = this.sender;
+			this.channel = channel;
+			this.sender = sender;
+			running = true;
 		}
 		
 		@Override
 		public void run() {
 			try {
 				// pause for 1 - 60 seconds
-				Thread.sleep((1 + rand.nextInt(59)) * 1000);
+				Thread.sleep((1 + rand.nextInt(9)) * 1000);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
-				sendMessage(channel, "Something interrupted your fishing. How rude.");
+				// do nothing
 			}
 			
-			sendMessage(channel, "A fish is on the line, " + currentFisher + ". " + 
-					Colors.BOLD + Colors.DARK_BLUE + "!reel " + Colors.NORMAL + "it in!");
+			if (running) {
+				sendMessage(channel, "A fish is on the line, " + currentFisher + ". " + 
+						Colors.BOLD + Colors.DARK_BLUE + "!reel " + Colors.NORMAL + "it in!");
+				reelTimer = new ReelTimer(channel, sender);
+				new Thread(reelTimer).start();
+			}
 		}
 		
+		public void stop() {
+			running = false;
+		}
+	}
+	
+	private class ReelTimer implements Runnable {
+		String channel;
+		String sender;
+		Fish newFish;
+		long timeElapsed;
+		boolean fishOnLine;
+		
+		public ReelTimer(String channel, String sender) {
+			this.channel = channel;
+			this.sender = sender;
+			timeElapsed = 0;
+			fishOnLine = true;
+		}
+		
+		@Override
+		public void run() {
+			long timeStarted = System.currentTimeMillis();
+			
+			while (fishOnLine && System.currentTimeMillis() - timeStarted < 1000 * 10) {
+				timeElapsed = System.currentTimeMillis() - timeStarted;
+			}
+			
+			currentFisher = "";
+			if (fishOnLine) {
+				fishOnLine = false;
+				sendMessage(channel, "Oh no, the " + lastFish.weight() + "-lb. " + 
+						lastFish.name() + " got away!");
+			}
+		}
+		
+		public void stop() {
+			fishOnLine = false;
+		}
+		
+		public boolean fishOnLine() {
+			return fishOnLine;
+		}
 	}
 	
 	private void fish(String channel, String sender, String message)
 			throws FileNotFoundException {
+		
+		sendNotice(sender, "You cast out your line.");
+		
 		Fish newFish = new Fish("temp", sender);
 		String newName;
 
@@ -138,33 +195,48 @@ public class TestBot extends PircBot {
 		}
 
 		newFish.setName(newName);
+		lastFish = newFish;
+		
+		currentFisher = sender;
+		fishTimer = new FishTimer(channel, sender);
+		new Thread(fishTimer).start();
+		
 
-		int place = fishManager.catchFish(newFish) + 1;
-
-		saveFish();
-
-		String outMessage = sender + " caught a";
-		if (newFish.name().matches("[aeiouAEIOU].*")) {
-			outMessage += "n";
-		}
-		outMessage += " " + newFish.name() + " weighing " + newFish.weight()
-				+ " lbs.!";
-
-		sendMessage(channel, Colors.BLUE + "F" + Colors.PURPLE + "I"
-				+ Colors.RED + "S" + Colors.OLIVE + "H" + Colors.YELLOW + "!!");
-		sendMessage(channel, outMessage);
-		if (fishManager.lastCaughtIsBiggest()) {
-			sendMessage(channel, Colors.BOLD + Colors.RED + "NEW RECORD! ");
-		}
-		if (place <= 10) {
-			sendMessage(channel, newFish.catcher() + "'s " + newFish.name() + 
-					" broke the nr " + place + " record weight!");
-		}
+//		int place = fishManager.catchFish(newFish) + 1;
+//
+//		saveFish();
+//
+//		String outMessage = sender + " caught a";
+//		if (newFish.name().matches("[aeiouAEIOU].*")) {
+//			outMessage += "n";
+//		}
+//		outMessage += " " + newFish.name() + " weighing " + newFish.weight()
+//				+ " lbs.!";
+//
+//		sendMessage(channel, Colors.BLUE + "F" + Colors.PURPLE + "I"
+//				+ Colors.RED + "S" + Colors.OLIVE + "H" + Colors.YELLOW + "!!");
+//		sendMessage(channel, outMessage);
+//		if (fishManager.lastCaughtIsBiggest()) {
+//			sendMessage(channel, Colors.BOLD + Colors.RED + "NEW RECORD! ");
+//		}
+//		if (place <= 10) {
+//			sendMessage(channel, newFish.catcher() + "'s " + newFish.name() + 
+//					" broke the nr " + place + " record weight!");
+//		}
 	}
 	
 	private void reel(String channel, String sender, String message) {
-		if (sender.equals(currentFisher)) {
-			
+		if (sender.equals(currentFisher) && reelTimer != null) {
+			reelTimer.fishOnLine = false;
+			double time = reelTimer.timeElapsed / 1000.0;
+			reelTimer = null;
+			sendMessage(channel, "YAY YOU CAUGHT A FISH AND IT ONLY TOOK " + time + " s");
+		} else if (sender.equals(currentFisher) && reelTimer == null) {
+			fishTimer.stop();
+			currentFisher = "";
+			sendNotice(sender, "You pulled out prematurely!");
+		} else {
+			sendNotice(sender, "You have not cast a line!");
 		}
 	}
 	
