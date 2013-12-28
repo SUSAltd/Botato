@@ -65,6 +65,14 @@ public class TestBot extends PircBot {
 			String kickerHostname, String recipientNick, String reason) {
 		sendMessage(channel, "AND STAY OUT");
 	}
+	
+	public void onDisconnect() {
+		try {
+			main(null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	public void onMessage(String channel, String sender, String login,
 			String hostname, String message) {
@@ -176,7 +184,7 @@ public class TestBot extends PircBot {
 			}
 		}
 		
-		public void stop() {
+		public synchronized void stop() {
 			fishOnLine = false;
 		}
 		
@@ -221,7 +229,7 @@ public class TestBot extends PircBot {
 	private void reel(String channel, String sender, String message) 
 			throws FileNotFoundException {
 		if (sender.equals(currentFisher) && reelTimer != null) {
-			reelTimer.fishOnLine = false; // replaces functionality of reelTimer.stop()
+			reelTimer.stop();
 			double time = reelTimer.timeElapsed / 1000.0;
 			reelTimer = null;
 			
