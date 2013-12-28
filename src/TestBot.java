@@ -141,14 +141,15 @@ public class TestBot extends PircBot {
 
             try {
                 Thread.sleep(this.biteLifetime);
-                // reeled it in too late :(
-                tooLate();
 
             } catch (InterruptedException e) {
                 // reeled it in on time! :D
                 onTime();
-
+                return;
             }
+
+            // reeled it in too late :(
+            tooLate();
         }
 
         private void tooEarly() {
@@ -161,10 +162,10 @@ public class TestBot extends PircBot {
         }
 
         private void onTime() {
-            int place = fishManager.catchFish(myFish) + 1;
-
+            int place;
             try {
                 synchronized(bot) {
+                    place = fishManager.catchFish(myFish) + 1;
                     bot.saveFish();
                 }
             } catch (IOException e) {
