@@ -7,23 +7,18 @@ public class TestBot extends PircBot {
 	PrintStream output;
 	Random rand;
 	
-	String currentFisher;
-	FishTimer fishTimer;
-	ReelTimer reelTimer;
-	Fish lastFish; // I did not want to do this
-	
 	String fishListFile;
 	String fishOutFile;
 	File fishData;
 	GrammarSolver fishSolver;
 	FishManager fishManager;
 
+    HashMap<String, Thread> fishers;
+
 	public TestBot(File fishListFile) throws IOException {
 		rand = new Random();
 
 		// initializes fish
-		lastFish = new Fish(); // did not want
-		currentFisher = "";
 		List<Fish> fishList = new ArrayList<Fish>();
 		fishData = new File("data/fishdata.csv");
 		if (!fishData.createNewFile()) {
@@ -59,6 +54,8 @@ public class TestBot extends PircBot {
 		}
 		fishSolver = new GrammarSolver(
 				Collections.unmodifiableList(fishGrammar));
+
+        fishers = new HashMap<String, Thread>();
 	}
 
 	public void onKick(String channel, String kickerNick, String kickerLogin,
@@ -80,25 +77,13 @@ public class TestBot extends PircBot {
 		if (message.equals("!fish")) {
 			if (System.currentTimeMillis() - fishManager.getLastFishCatchTime() >
 					(30 + rand.nextInt(30)) * 1000) {
-				try {
-					fish(channel, sender, message);
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-					sendMessage(channel, "SUSAltd: " +
-							"you did something wrong and I am disappointed.");
-				}
+				fish(channel, sender, message);
 			} else {
 				sendNotice(sender, "The fish aren't biting right now!");
 			}
 			
 		} else if (message.equals("!reel")) {
-			try {
-				reel(channel, sender, message);
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
+			reel(channel, sender, message);
 		// !fishstats
 		} else if (message.startsWith("!fishstats")) {
 			fishStats(sender, message);
@@ -116,154 +101,130 @@ public class TestBot extends PircBot {
 			sendAction(channel, "botate botate botate");
 		}
 	}
-	
-	private class FishTimer implements Runnable {
-		
-		String channel;
-		String sender;
-		Fish newFish;
-		boolean running;
-		
-		public FishTimer(String channel, String sender, Fish newFish) {
-			this.channel = channel;
-			this.sender = sender;
-			this.newFish = newFish;
-			running = true;
-		}
-		
-		@Override
-		public void run() {
-			try {
-				// pause for 1 - 60 seconds
-				Thread.sleep((1 + rand.nextInt(59)) * 1000);
-			} catch (InterruptedException e) {
-				// do nothing
-			}
-			
-			if (running) {
-				sendMessage(channel, "A fish is on the line, " + currentFisher + ". " + 
-						Colors.BOLD + Colors.DARK_BLUE + "!reel " + Colors.NORMAL + "it in!");
-				reelTimer = new ReelTimer(channel, sender, newFish);
-				new Thread(reelTimer).start();
-			}
-		}
-		
-		public void stop() {
-			running = false;
-		}
-	}
-	
-	private class ReelTimer implements Runnable {
-		String channel;
-		String sender;
-		long timeElapsed;
-		Fish newFish;
-		boolean fishOnLine;
-		
-		public ReelTimer(String channel, String sender, Fish newFish) {
-			this.channel = channel;
-			this.sender = sender;
-			this.newFish = newFish;
-			timeElapsed = 0;
-			fishOnLine = true;
-		}
-		
-		@Override
-		public void run() {
-			long timeStarted = System.currentTimeMillis();
-			
-			while (fishOnLine && System.currentTimeMillis() - timeStarted < 1000 * 5) {
-				timeElapsed = System.currentTimeMillis() - timeStarted;
-			}
-			
-			currentFisher = "";
-			if (fishOnLine) {
-				fishOnLine = false;
-				sendMessage(channel, "Oh no, the " + newFish.weight() + "-lb. " + 
-						newFish.name() + " got away!");
-			}
-		}
-		
-		public synchronized void stop() {
-			fishOnLine = false;
-		}
-		
-		public boolean fishOnLine() {
-			return fishOnLine;
-		}
-	}
-	
-	private void fish(String channel, String sender, String message)
-			throws FileNotFoundException {
-		if (currentFisher.equals("")) {
-			sendNotice(sender, "You cast out your line.");
-			
-			Fish newFish = new Fish("temp", sender);
-			lastFish = newFish;
-			String newName;
-	
-			// decide what adjective to attach to the fish
-			if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
-				newName = fishSolver.generate("<fish_big>", 1)[0];
-			} else if (newFish.weight() < Fish.MEAN_WEIGHT - 1.5
-					* Fish.STD_DEV_WEIGHT) {
-				newName = fishSolver.generate("<fish_sml>", 1)[0];
-			} else {
-				newName = fishSolver.generate("<fish_avg>", 1)[0];
-			}
-	
-			newFish.setName(newName);
-			
-			currentFisher = sender;
-			fishTimer = new FishTimer(channel, sender, newFish);
-			new Thread(fishTimer).start();
-		
-		} else if (currentFisher.equals(sender)) {
-			sendNotice(sender, "You already have a line out.");
-		} else {
-			sendNotice(sender, "Someone else is fishing.");
-		}
 
+    private class FisherHandler implements Runnable {
+        TestBot bot;
+        String channel;
+        String fisher;
+        long fishTime; // timestamp in ms
+        long waitingDuration; // in ms
+        long biteLifetime; // in ms
+        Fish myFish;
+
+        public FisherHandler(TestBot bot, String fisher, Fish myFish) {
+            this.bot = bot;
+            this.channel = bot.getChannels()[0];
+            this.fisher = fisher;
+            this.myFish = myFish;
+            this.fishTime = System.currentTimeMillis();
+            // a time between 1 and 60 seconds
+            this.waitingDuration = (1 + rand.nextInt(59)) * 1000;
+            // the time the fish stays on the line.
+            this.biteLifetime = 5000;
+        }
+
+        @Override
+        public void run() {
+            sendMessage(channel, "You cast a line...");
+
+            // wait for fish...
+            try {
+                Thread.sleep(this.waitingDuration);
+            } catch (InterruptedException e) {
+                // reeled in too quickly
+                tooEarly();
+                return;
+            }
+
+            sendMessage(channel, "A fish is on the line, " + fisher + ". " +
+                    Colors.BOLD + Colors.DARK_BLUE + "!reel" + Colors.NORMAL + " it in!");
+
+            try {
+                Thread.sleep(this.biteLifetime);
+
+            } catch (InterruptedException e) {
+                // reeled it in on time! :D
+                onTime();
+                return;
+            }
+
+            // reeled it in too late :(
+            tooLate();
+        }
+
+        private void tooEarly() {
+            sendMessage(channel, "You pulled out prematurely!");
+        }
+
+        private void tooLate() {
+            sendMessage(channel, "Oh no, the " + myFish.weight() + "-lb. " +
+                    myFish.name() + " got away!");
+        }
+
+        private void onTime() {
+            int place;
+            try {
+                synchronized(bot) {
+                    place = fishManager.catchFish(myFish) + 1;
+                    bot.saveFish();
+                }
+            } catch (IOException e) {
+                System.err.println("[ERROR] Couldn't save fish info.");
+            }
+
+            String outMessage = fisher + " caught a";
+            if (myFish.name().matches("[aeiouAEIOU].*")) {
+                outMessage += "n";
+            }
+            outMessage += " " + myFish.name() + " weighing " + myFish.weight() + " lbs.!";
+            sendMessage(channel, Colors.BLUE + "F" + Colors.PURPLE + "I"
+                    + Colors.RED + "S" + Colors.OLIVE + "H" + Colors.YELLOW + "!!");
+            sendMessage(channel, outMessage);
+            if (fishManager.lastCaughtIsBiggest()) {
+                sendMessage(channel, Colors.BOLD + Colors.RED + "NEW RECORD! ");
+            }
+            if (place <= 10) {
+                sendMessage(channel, myFish.catcher() + "'s " + myFish.name() +
+                        " broke the nr " + place + " record weight!");
+            }
+
+        }
+
+    }
+	
+	private void fish(String channel, String sender, String message) {
+        if (fishers.containsKey(sender)) {
+            sendNotice(sender, "You already have a line out.");
+        } else {
+            Fish newFish = new Fish("temp", sender);
+            String newName;
+
+            // decide what adjective to attach to the fish
+            if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
+                newName = fishSolver.generate("<fish_big>", 1)[0];
+            } else if (newFish.weight() < Fish.MEAN_WEIGHT - 1.5
+                    * Fish.STD_DEV_WEIGHT) {
+                newName = fishSolver.generate("<fish_sml>", 1)[0];
+            } else {
+                newName = fishSolver.generate("<fish_avg>", 1)[0];
+            }
+
+            newFish.setName(newName);
+
+            FisherHandler fh = new FisherHandler(this, sender, newFish);
+            Thread fht = new Thread(fh);
+            fishers.put(sender, fht);
+            fht.start();
+        }
 	}
 	
-	private void reel(String channel, String sender, String message) 
-			throws FileNotFoundException {
-		if (sender.equals(currentFisher) && reelTimer != null) {
-			reelTimer.stop();
-			double time = reelTimer.timeElapsed / 1000.0;
-			reelTimer = null;
-			
-			Fish newFish = lastFish;
-			int place = fishManager.catchFish(newFish) + 1;
-			
-			saveFish();
-	
-			String outMessage = sender + " caught a";
-			if (newFish.name().matches("[aeiouAEIOU].*")) {
-				outMessage += "n";
-			}
-			outMessage += " " + newFish.name() + " weighing " + newFish.weight()
-					+ " lbs.!";
-	
-			sendMessage(channel, Colors.BLUE + "F" + Colors.PURPLE + "I"
-					+ Colors.RED + "S" + Colors.OLIVE + "H" + Colors.YELLOW + "!!");
-			sendMessage(channel, outMessage);
-			if (fishManager.lastCaughtIsBiggest()) {
-				sendMessage(channel, Colors.BOLD + Colors.RED + "NEW RECORD! ");
-			}
-			if (place <= 10) {
-				sendMessage(channel, newFish.catcher() + "'s " + newFish.name() + 
-						" broke the nr " + place + " record weight!");
-			}
-			
-			// sendMessage(channel, "YAY YOU CAUGHT A FISH AND IT ONLY TOOK " + time + "s");
-		} else if (sender.equals(currentFisher) && reelTimer == null) {
-			fishTimer.stop();
-			currentFisher = "";
-			sendNotice(sender, "You pulled out prematurely!");
-		} else {
-			sendNotice(sender, "You have not cast a line!");
-		}
+	private void reel(String channel, String sender, String message) {
+		if (fishers.containsKey(sender)) {
+            Thread fht = fishers.remove(sender);
+            fht.interrupt();
+        } else {
+            sendMessage(channel, "You have not cast a line!");
+        }
 	}
 	
 	private void fishStats(String sender, String message) {
@@ -328,7 +289,7 @@ public class TestBot extends PircBot {
 				"for viewing in programs such as Microsoft Excel.");
 	}
 
-	private void saveFish() throws FileNotFoundException {
+	public void saveFish() throws FileNotFoundException {
 		Date lastUpdate = new Date(System.currentTimeMillis());
 		
 		output = new PrintStream(fishData);
