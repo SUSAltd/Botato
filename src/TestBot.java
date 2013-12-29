@@ -13,7 +13,11 @@ public class TestBot extends PircBot {
 	GrammarSolver fishSolver;
 	FishManager fishManager;
 
+	//String currentFisher;
     HashMap<String, Thread> fishers;
+    
+    final int MAX_FISHERS = 1; // 0 or less for no maximum
+    final int MAX_REEL_WAITTIME = 30; // 0 or less for no !reel
 
 	public TestBot(File fishListFile) throws IOException {
 		rand = new Random();
@@ -55,7 +59,8 @@ public class TestBot extends PircBot {
 		fishSolver = new GrammarSolver(
 				Collections.unmodifiableList(fishGrammar));
 
-        fishers = new HashMap<String, Thread>();
+		//currentFisher = "";
+		fishers = new HashMap<String, Thread>();
 	}
 
 	public void onKick(String channel, String kickerNick, String kickerLogin,
@@ -105,27 +110,27 @@ public class TestBot extends PircBot {
     private class FisherHandler implements Runnable {
         TestBot bot;
         String channel;
-        String fisher;
+        String sender;
         long fishTime; // timestamp in ms
         long waitingDuration; // in ms
         long biteLifetime; // in ms
         Fish myFish;
 
-        public FisherHandler(TestBot bot, String fisher, Fish myFish) {
+        public FisherHandler(TestBot bot, String sender, String channel, Fish myFish) {
             this.bot = bot;
-            this.channel = bot.getChannels()[0];
-            this.fisher = fisher;
-            this.myFish = myFish;
-            this.fishTime = System.currentTimeMillis();
+            this.channel = channel;
+            this.sender = sender;
             // a time between 1 and 60 seconds
-            this.waitingDuration = (1 + rand.nextInt(59)) * 1000;
-            // the time the fish stays on the line.
-            this.biteLifetime = 5000;
+            this.waitingDuration = (1 + rand.nextInt(MAX_REEL_WAITTIME - 1)) * 1000;
+            // the time the fish stays on the line
+            // the bigger the fish, the faster one must react
+            this.biteLifetime = (long) (50000 / myFish.weight());
+            this.myFish = myFish;
         }
 
         @Override
         public void run() {
-            sendMessage(channel, "You cast a line...");
+            sendNotice(sender, "You cast out your line...");
 
             // wait for fish...
             try {
@@ -136,8 +141,9 @@ public class TestBot extends PircBot {
                 return;
             }
 
-            sendMessage(channel, "A fish is on the line, " + fisher + ". " +
-                    Colors.BOLD + Colors.DARK_BLUE + "!reel" + Colors.NORMAL + " it in!");
+            fishTime = System.currentTimeMillis();
+            sendMessage(channel, "A fish is on the line, " + sender + ". " +
+                    Colors.BOLD + Colors.TEAL + "!reel" + Colors.NORMAL + " it in!");
 
             try {
                 Thread.sleep(this.biteLifetime);
@@ -153,7 +159,7 @@ public class TestBot extends PircBot {
         }
 
         private void tooEarly() {
-            sendMessage(channel, "You pulled out prematurely!");
+            sendNotice(sender, "You pulled out prematurely!");
         }
 
         private void tooLate() {
@@ -162,9 +168,9 @@ public class TestBot extends PircBot {
         }
 
         private void onTime() {
-            int place;
+            int place = 11;
             try {
-                synchronized(bot) {
+                synchronized(bot) { // prevents weird stuff in case multiple saves
                     place = fishManager.catchFish(myFish) + 1;
                     bot.saveFish();
                 }
@@ -172,7 +178,7 @@ public class TestBot extends PircBot {
                 System.err.println("[ERROR] Couldn't save fish info.");
             }
 
-            String outMessage = fisher + " caught a";
+            String outMessage = sender + " caught a";
             if (myFish.name().matches("[aeiouAEIOU].*")) {
                 outMessage += "n";
             }
@@ -194,8 +200,12 @@ public class TestBot extends PircBot {
 	
 	private void fish(String channel, String sender, String message) {
         if (fishers.containsKey(sender)) {
+		// if (currentFisher.equals(sender)) {
             sendNotice(sender, "You already have a line out.");
-        } else {
+        //} else if (!currentFisher.isEmpty()) {
+        } else if (MAX_FISHERS != 0 && fishers.size() >= MAX_FISHERS) {
+        	sendNotice(sender, "There ain't enough room around here for another fisher.");
+		} else {
             Fish newFish = new Fish("temp", sender);
             String newName;
 
@@ -211,10 +221,15 @@ public class TestBot extends PircBot {
 
             newFish.setName(newName);
 
-            FisherHandler fh = new FisherHandler(this, sender, newFish);
-            Thread fht = new Thread(fh);
-            fishers.put(sender, fht);
-            fht.start();
+            FisherHandler fh = new FisherHandler(this, sender, channel, newFish);
+            
+            if (MAX_REEL_WAITTIME <= 0) {
+            	fh.onTime();
+            } else {
+	            Thread fht = new Thread(fh);
+	            fishers.put(sender, fht);
+	            fht.start();
+            }
         }
 	}
 	
@@ -223,7 +238,7 @@ public class TestBot extends PircBot {
             Thread fht = fishers.remove(sender);
             fht.interrupt();
         } else {
-            sendMessage(channel, "You have not cast a line!");
+            sendNotice(sender, "You have not cast a line!");
         }
 	}
 	
@@ -280,8 +295,17 @@ public class TestBot extends PircBot {
 	}
 	
 	private void fishHelp(String sender) {
-		sendNotice(sender, "!fish - Catch a fish! If the fish are not biting, " +
-				"wait a bit and try again.");
+		String fishMessage = "!fish - Try your hand at fishing! If the fish are not biting, " +
+				"wait a bit and try again.";
+		if (MAX_FISHERS > 1) {
+			fishMessage += " Only " + MAX_FISHERS + " people can fish at a time.";
+		} else if (MAX_FISHERS == 1) {
+			fishMessage += " Only one person can fish at a time.";
+		}
+		
+		sendNotice(sender, fishMessage);
+		sendNotice(sender, "!reel - When a fish is on your line, " +
+				"!reel it in before it gets away!");
 		sendNotice(sender, "!fishstats - See some statistics of the total fish caught.");
 		sendNotice(sender, "!fishstats <nick> - See some statistics of the fish caught " +
 				"by a specified nick.");
