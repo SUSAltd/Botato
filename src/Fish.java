@@ -15,6 +15,7 @@ public class Fish implements Comparable<Fish> {
 	private String catcher;
 	private double weight;
 	private String dateCaught;
+	private long reactionTime;
 
 	public final static double MEAN_WEIGHT = 10.0;
 	public final static double STD_DEV_WEIGHT = 4.0;
@@ -157,7 +158,15 @@ public class Fish implements Comparable<Fish> {
 	public String dateCaught() {
 		return dateCaught;
 	}
+	
+	public long reactionTime() {
+		return reactionTime;
+	}
 
+	public void setReactionTime(long millis) {
+		reactionTime = millis;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 

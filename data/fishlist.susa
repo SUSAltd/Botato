@@ -1,6 +1,10 @@
-<fish_big> ::= <adj_big> <fish> | <adj_big> <adj_xmas> <fish> | <adj_big> <fish_xmas> | <adj_big> <adj_xmas> <fish_xmas>
-<fish_sml> ::= <adj_sml> <fish> | <adj_sml> <adj_xmas> <fish> | <adj_sml> <fish_xmas> | <adj_sml> <adj_xmas> <fish_xmas>
-<fish_avg> ::= <adj_avg> <fish> | <adj_xmas> <fish> | <adj_avg> <fish_xmas> | <adj_xmas> <fish_xmas>
+#<fish_big> ::= <adj_big> <fish> | <adj_big> <adj_xmas> <fish> | <adj_big> <fish_xmas> | <adj_big> <adj_xmas> <fish_xmas>
+#<fish_sml> ::= <adj_sml> <fish> | <adj_sml> <adj_xmas> <fish> | <adj_sml> <fish_xmas> | <adj_sml> <adj_xmas> <fish_xmas>
+#<fish_avg> ::= <adj_avg> <fish> | <adj_xmas> <fish> | <adj_avg> <fish_xmas> | <adj_xmas> <fish_xmas>
+
+<fish_big> ::= <adj_big> <fish>
+<fish_sml> ::= <adj_sml> <fish>
+<fish_avg> ::= <adj_avg> <fish>
 
 <adj_avg> ::= African | amazing | Arctic | armoured | Asian | awkward | beached | bigeye | blanched | burning | chocolate-covered | cool | dangerous | dead | delirious | despicable | electric | electronic | European | explosive | expressive | fabulous | fallacious | flawless | frozen | genetically modified | glass | glow-in-the-dark | glowing | greedy | gregarious | hairy | high | insidious | jocular | keen | lazy | leopard-spotted | literary | lovely | magical | malnourished | metal | musical | normal | nosey | noxious | one-legged | oppressed | optimal | oxidized | pampered | peaceful | poisonous | professional | quintessential | radiant | radioactive | rainbow | red-hot | resplendent | rich | robotic | scorched | scorching | secret | shiny | slippery | slithering | smoked | spike-tailed | spiky | steamed | steaming | three-legged | unanimous | uncomfortable | unique | volatile | wicked | wiggly | winged | wise | X-rated | yellowish | zealous
 <adj_big> ::= big | big-boned | bloated | bulky | burly | capacious | chubby | colossal | commodious | enormous | fat | gargantuan | gigantic | ginormous | heavy | heavyweight | hefty | huge | hulking | humongous | immense | jumbo | massive | mega | muscly | oversized | prodigious | sizable | substantial | super-colossal | tremendous | voluminous | well-endowed | whopper

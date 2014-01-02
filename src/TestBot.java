@@ -3,24 +3,31 @@ import java.util.*;
 import java.io.*;
 
 public class TestBot extends PircBot {
-	Scanner input;
-	PrintStream output;
-	Random rand;
+	private Scanner input;
+	private PrintStream output;
+	private Random rand;
 	
-	String fishListFile;
-	String fishOutFile;
-	File fishData;
-	GrammarSolver fishSolver;
-	FishManager fishManager;
-
-	//String currentFisher;
-    HashMap<String, Thread> fishers;
+	private List<String> ops;
+	
+	private File fishData;
+	private GrammarSolver fishSolver;
+	private FishManager fishManager;
+    private HashMap<String, Thread> fishers;
     
-    final int MAX_FISHERS = 1; // 0 or less for no maximum
-    final int MAX_REEL_WAITTIME = 30; // 0 or less for no !reel
+    //some "constant" stuff
+    private int maxFishers = 1; // 0 or less for no maximum
+    private int maxReelWait = 20; // in seconds; 0 or less for no !reel
 
 	public TestBot(File fishListFile) throws IOException {
 		rand = new Random();
+		
+		ops = new ArrayList<String>();
+		File opsFile = new File("ops.txt");
+		opsFile.createNewFile();
+		input = new Scanner(opsFile);
+		while (input.hasNextLine()) {
+			ops.add(input.nextLine());
+		}
 
 		// initializes fish
 		List<Fish> fishList = new ArrayList<Fish>();
@@ -52,14 +59,13 @@ public class TestBot extends PircBot {
 		List<String> fishGrammar = new ArrayList<String>();
 		while (input.hasNextLine()) {
 			String next = input.nextLine().trim();
-			if (next.length() > 0) {
+			if (next.length() > 0 && !next.startsWith("#")) {
 				fishGrammar.add(next);
 			}
 		}
 		fishSolver = new GrammarSolver(
 				Collections.unmodifiableList(fishGrammar));
 
-		//currentFisher = "";
 		fishers = new HashMap<String, Thread>();
 	}
 
@@ -70,6 +76,7 @@ public class TestBot extends PircBot {
 	
 	public void onDisconnect() {
 		try {
+			Thread.sleep(1000 * 60);
 			main(null);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -78,6 +85,7 @@ public class TestBot extends PircBot {
 
 	public void onMessage(String channel, String sender, String login,
 			String hostname, String message) {
+		
 		// !fish
 		if (message.equals("!fish")) {
 			if (System.currentTimeMillis() - fishManager.getLastFishCatchTime() >
@@ -86,9 +94,11 @@ public class TestBot extends PircBot {
 			} else {
 				sendNotice(sender, "The fish aren't biting right now!");
 			}
-			
+		
+		// !reel
 		} else if (message.equals("!reel")) {
 			reel(channel, sender, message);
+			
 		// !fishstats
 		} else if (message.startsWith("!fishstats")) {
 			fishStats(sender, message);
@@ -104,6 +114,36 @@ public class TestBot extends PircBot {
 		// botate
 		} else if (message.equalsIgnoreCase(this.getNick() + " botate")) {
 			sendAction(channel, "botate botate botate");
+		
+		// op commands
+		} else if (ops.contains(sender)) {
+			// set commands
+			if (message.startsWith(this.getNick() + " set ")) {
+				String prefix = this.getNick() + " set ";
+				String command = message.substring(prefix.length());
+				
+				// maxFishers
+				if (command.matches("maxfishers \\d+")) {
+					String n = command.substring(command.indexOf(' ') + 1);
+					int num = Integer.parseInt(n);
+					
+					maxFishers = num;
+					sendNotice(sender, "Maximum number of fishers changed to " + num);
+				
+				// maxReelWait
+				} else if (command.matches("maxreelwait \\d+")) {
+					String n = command.substring(command.indexOf(' ') + 1);
+					int num = Integer.parseInt(n);
+					
+					maxReelWait = num;
+					sendNotice(sender, "Maximum reel wait time changed to " + num + " sec");
+				}
+				
+			// nick
+			} else if (message.startsWith(this.getNick() + " nick ")) {
+				String newNick = message.substring(message.lastIndexOf(' ') + 1);
+				this.changeNick(newNick);
+			}
 		}
 	}
 
@@ -121,10 +161,14 @@ public class TestBot extends PircBot {
             this.channel = channel;
             this.sender = sender;
             // a time between 1 and 60 seconds
-            this.waitingDuration = (1 + rand.nextInt(MAX_REEL_WAITTIME - 1)) * 1000;
+            if (maxReelWait > 0) {
+            	this.waitingDuration = (1 + rand.nextInt(maxReelWait - 1)) * 1000;
+            } else {
+            	this.waitingDuration = 0;
+            }
             // the time the fish stays on the line
             // the bigger the fish, the faster one must react
-            this.biteLifetime = (long) (50000 / myFish.weight());
+            this.biteLifetime = (long) (1000 * 100 / myFish.weight());
             this.myFish = myFish;
         }
 
@@ -168,6 +212,7 @@ public class TestBot extends PircBot {
         }
 
         private void onTime() {
+        	myFish.setReactionTime(System.currentTimeMillis() - fishTime);
             int place = 11;
             try {
                 synchronized(bot) { // prevents weird stuff in case multiple saves
@@ -200,10 +245,8 @@ public class TestBot extends PircBot {
 	
 	private void fish(String channel, String sender, String message) {
         if (fishers.containsKey(sender)) {
-		// if (currentFisher.equals(sender)) {
             sendNotice(sender, "You already have a line out.");
-        //} else if (!currentFisher.isEmpty()) {
-        } else if (MAX_FISHERS != 0 && fishers.size() >= MAX_FISHERS) {
+        } else if (maxFishers != 0 && fishers.size() >= maxFishers) {
         	sendNotice(sender, "There ain't enough room around here for another fisher.");
 		} else {
             Fish newFish = new Fish("temp", sender);
@@ -223,7 +266,7 @@ public class TestBot extends PircBot {
 
             FisherHandler fh = new FisherHandler(this, sender, channel, newFish);
             
-            if (MAX_REEL_WAITTIME <= 0) {
+            if (maxReelWait <= 0) {
             	fh.onTime();
             } else {
 	            Thread fht = new Thread(fh);
@@ -232,6 +275,8 @@ public class TestBot extends PircBot {
             }
         }
 	}
+	
+	
 	
 	private void reel(String channel, String sender, String message) {
 		if (fishers.containsKey(sender)) {
@@ -297,9 +342,9 @@ public class TestBot extends PircBot {
 	private void fishHelp(String sender) {
 		String fishMessage = "!fish - Try your hand at fishing! If the fish are not biting, " +
 				"wait a bit and try again.";
-		if (MAX_FISHERS > 1) {
-			fishMessage += " Only " + MAX_FISHERS + " people can fish at a time.";
-		} else if (MAX_FISHERS == 1) {
+		if (maxFishers > 1) {
+			fishMessage += " Only " + maxFishers + " people can fish at a time.";
+		} else if (maxFishers == 1) {
 			fishMessage += " Only one person can fish at a time.";
 		}
 		
@@ -331,7 +376,7 @@ public class TestBot extends PircBot {
 
 		String fishList = p.getProperty("fish_list_file");
 		if (fishList == null) {
-			throw new FileNotFoundException("The property fish_list_file"
+			System.err.println("The property fish_list_file"
 					+ "was not found in bot.ini.");
 		}
 
