@@ -15,6 +15,7 @@ import java.util.*;
 public class GrammarSolver {
 	private SortedMap<String, List<String>> grammar; // rules of the grammar
 
+	
 	/**
 	 * Constructs a GrammarSolver object with a specific set of rules defined by
 	 * the given BNF grammar.
@@ -39,11 +40,12 @@ public class GrammarSolver {
 			}
 
 			String[] terminals = parts[1].split("[|]");
-			this.grammar.put(parts[0], arrayToList(terminals));
+			this.grammar.put(parts[0], Arrays.asList(terminals));
 
 		}
 	}
 
+	
 	/**
 	 * Returns true if the given symbol is a nonterminal of the grammar; returns
 	 * false otherwise.
@@ -57,6 +59,7 @@ public class GrammarSolver {
 		return grammar.containsKey(symbol);
 	}
 
+	
 	/**
 	 * Generates a given number of random phrases generated from the given
 	 * symbol, based off of the rules defined in the grammar.
@@ -84,6 +87,7 @@ public class GrammarSolver {
 		return sentence;
 	}
 
+	
 	/**
 	 * Returns a String of the set of nonterminals, sorted, surrounded by
 	 * brackets, and separated by commas.
@@ -95,6 +99,7 @@ public class GrammarSolver {
 		return grammar.keySet().toString();
 	}
 
+	
 	/**
 	 * Generates and returns a random phrase generated from the given symbol,
 	 * based off of the rules defined in the grammar.
@@ -124,38 +129,7 @@ public class GrammarSolver {
 				result += generate(s) + " ";
 			}
 		}
-		
-//		if (!keySplit[0].equals(nextKey)) {
-//			for (int i = 0; i < keySplit.length; i++) {
-//				if (grammarContains(keySplit[i])) {
-//					result += generate(keySplit[i]) + " ";
-//				} else {
-//					result += keySplit[i] + " ";
-//				}
-//			}
-//		} else if (!grammarContains(nextKey)) {
-//			result += nextKey + " ";
-//		} else {
-//			result += generate(nextKey) + " ";
-//		}
 
 		return result.trim();
-	}
-
-	/**
-	 * Converts an array of Strings to an ArrayList of Strings.
-	 * 
-	 * @param arrayIn
-	 *            - the array to be converted
-	 * @return an ArrayList containing what was in the given array
-	 */
-	private List<String> arrayToList(String[] arrayIn) {
-		List<String> list = new ArrayList<String>();
-
-		for (String s : arrayIn) {
-			list.add(s);
-		}
-
-		return list;
 	}
 }
