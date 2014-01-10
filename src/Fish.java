@@ -73,7 +73,7 @@ public class Fish implements Comparable<Fish> {
 	 *             if weight is negative, which leads to the untimely demise of
 	 *             the universe
 	 */
-	public Fish(String name, String catcher, double weight, Date date) {
+	public Fish(String name, String catcher, double weight, Date date, long reactionTime) {
 		if (weight < 0) {
 			// Universe.selfDestruct();
 			throw new IllegalArgumentException();
@@ -82,6 +82,7 @@ public class Fish implements Comparable<Fish> {
 		this.catcher = catcher;
 		this.weight = truncate(weight);
 		this.dateCaught = String.format("%tF %<tT", date);
+		this.reactionTime = reactionTime;
 	}
 	
 	/**
@@ -101,7 +102,7 @@ public class Fish implements Comparable<Fish> {
 	 *             if weight is negative, which leads to the untimely demise of
 	 *             the universe
 	 */
-	public Fish(String name, String catcher, double weight, String date) {
+	public Fish(String name, String catcher, double weight, String date, long reactionTime) {
 		if (weight < 0) {
 			// Universe.selfDestruct();
 			throw new IllegalArgumentException();
@@ -110,6 +111,7 @@ public class Fish implements Comparable<Fish> {
 		this.catcher = catcher;
 		this.weight = truncate(weight);
 		this.dateCaught = date;
+		this.reactionTime = reactionTime;
 	}
 
 	/**
@@ -220,7 +222,7 @@ public class Fish implements Comparable<Fish> {
 		Calendar c = Calendar.getInstance();
 		c.set(2013, 9 - 1, 7, 15, 23, 35);
 
-		Fish fish2 = new Fish("Magikarp", "SUSAltd", 13.874511, c.getTime());
+		Fish fish2 = new Fish("Magikarp", "SUSAltd", 13.874511, c.getTime(), 0);
 		System.out.println("Fish 2");
 		System.out.println("    Name:        " + fish2.name());
 		System.out.println("    Caught by:   " + fish2.catcher());
