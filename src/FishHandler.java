@@ -19,6 +19,7 @@ public class FishHandler {
 	private TestBot bot;
 	private Random rand;
 	private HashMap<String, Thread> fishers;
+	private HashMap<String, Bait> baitsMap;
 	private GrammarSolver fishGrammar;
 	private File fishData;
 
@@ -29,37 +30,40 @@ public class FishHandler {
 
 	private int maxFishers = 1; // max people fishing at once: 0 or less for no
 								// maximum
-	private int maxReelWait = 20; // max amount of time to wait for fish in
+	private int maxReelWait = 0; // max amount of time to wait for fish in
 									// seconds: 0 or less for no !reel
+	private int baseCoolDown = 30;
 
-	public FishHandler(TestBot bot) throws IOException {
+	public FishHandler(TestBot bot, File fishData) throws IOException {
 		this.bot = bot;
 		this.rand = new Random();
 		this.fishers = new HashMap<String, Thread>();
+		this.baitsMap = new HashMap<String, Bait>();
 		String[] g = FishGrammars.getFishGrammar(FishGrammars.Holiday.DEFAULT);
 		List<String> grammar = Arrays.asList(g);
 		this.fishGrammar = new GrammarSolver(grammar);
 
 		// who needs csv parsers when you've got this stuff
 		List<Fish> fishList = new ArrayList<Fish>();
-		this.fishData = new File("data/fishdata.csv");
+		this.fishData = fishData;
 		if (!fishData.createNewFile()) {
 			input = new Scanner(fishData);
 			String[] line;
-			input.nextLine(); // skip first line for headers
+			if (input.hasNextLine())
+				input.nextLine(); // skip first line for headers
 			while (input.hasNextLine()) {
-				// line[] format = [dateCaught, catcher, name, weight,
-				// reactionTime]
+				// line[] format = 
+				// [dateCaught, catcher, name, weight, reactionTime, baitUsed, ___]
 				line = input.nextLine().split(",");
 				for (int i = 0; i < line.length; i++) {
 					String s = line[i];
 					if (s.startsWith("\"") && s.endsWith("\"")) {
-						line[i] = s.substring(1, s.length());
+						line[i] = s.substring(1, s.length() - 1);
 					}
 				}
 				Fish newFish = new Fish(line[2], line[1],
 						Double.parseDouble(line[3]), line[0],
-						Long.parseLong(line[4]));
+						Long.parseLong(line[4]), Bait.parseBait(line[5]));
 				fishList.add(newFish);
 			}
 		}
@@ -132,7 +136,11 @@ public class FishHandler {
 		}
 
 		public void onTime() {
-			myFish.setReactionTime(System.currentTimeMillis() - fishTime);
+			if (maxReelWait > 0)
+				myFish.setReactionTime(System.currentTimeMillis() - fishTime);
+			else
+				myFish.setReactionTime(0);
+			
 			int place = 11;
 			try {
 				place = fm.catchFish(myFish) + 1;
@@ -142,42 +150,67 @@ public class FishHandler {
 			}
 
 			String outMessage = sender + " caught a";
-			if (myFish.name().matches("[aeiouAEIOU].*")) {
+			if (myFish.name().matches("[aeiouAEIOU].*"))
 				outMessage += "n";
-			}
 			outMessage += " " + myFish.name() + " weighing " + myFish.weight()
-					+ " lbs.!";
+					+ " lbs.";
+			if (!myFish.baitUsed().equals(Bait.DEFAULT_BAIT))
+				outMessage += (" using " + myFish.baitUsed().name());
+			outMessage += '!';
+				
 			bot.sendMessage(channel, Colors.BLUE + "F" + Colors.PURPLE + "I"
 					+ Colors.RED + "S" + Colors.OLIVE + "H" + Colors.YELLOW
 					+ "!!");
 			bot.sendMessage(channel, outMessage);
+			
 			if (fm.lastCaughtIsBiggest()) {
 				bot.sendMessage(channel, Colors.BOLD + Colors.RED
-						+ "NEW RECORD! ");
+						+ "NEW RECORD!");
 			}
 			if (place <= 10) {
 				bot.sendMessage(channel,
 						myFish.catcher() + "'s " + myFish.name()
-								+ " broke the nr " + place + " record weight!");
+						+ " broke the nr " + place + " record weight!");
 			}
 		}
 	}
 
 	public void fish(String channel, String sender, String message) {
-		if (fishers.containsKey(sender)) {
+		if (fishers.containsKey(sender)) { // you are already fishing
 			bot.sendNotice(sender, "You already have a line out.");
-		} else if (maxFishers != 0 && fishers.size() >= maxFishers) {
+			
+		} else if (maxFishers != 0 && fishers.size() >= maxFishers) { // too many fishers
 			bot.sendNotice(sender,
 					"There ain't enough room around here for another fisher.");
+			
+		} else if (System.currentTimeMillis() - fm.getLastFishCatchTime() <
+					(baseCoolDown + rand.nextInt(baseCoolDown)) * 1000) { 
+														// too soon since last fish was caught
+			bot.sendNotice(sender, "The fish aren't biting right now!");
+			
+		} else if (!baitsMap.containsKey(sender) && rand.nextDouble() < 0.01) {
+			// you caught a bait
+			Bait b = BaitStrengths.BAITS[rand.nextInt(BaitStrengths.BAITS.length)];
+			baitsMap.put(sender, b);
+			
+			bot.sendMessage(channel, "What's this? " + sender + " found " + b.name() + "!");
+			
 		} else {
-			Fish newFish = new Fish("fish", sender);
+			// prepare a fish
+			
+			Fish newFish;
+			if (baitsMap.containsKey(sender)) {
+				newFish = new Fish("fish", sender, baitsMap.get(sender));
+				baitsMap.remove(sender);
+			} else {
+				newFish = new Fish("fish", sender);
+			}
 			String newName;
 
 			// decide what adjective to attach to the fish
 			if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
 				newName = fishGrammar.generate("<fish_big>", 1)[0];
-			} else if (newFish.weight() < Fish.MEAN_WEIGHT - 1.5
-					* Fish.STD_DEV_WEIGHT) {
+			} else if (newFish.weight() < Fish.MEAN_WEIGHT - 1.25 * Fish.STD_DEV_WEIGHT) {
 				newName = fishGrammar.generate("<fish_sml>", 1)[0];
 			} else {
 				newName = fishGrammar.generate("<fish_avg>", 1)[0];
@@ -268,7 +301,7 @@ public class FishHandler {
 		bot.dccSendFile(fishData, sender, 120000);
 	}
 
-	public void fishHelp(String sender) {
+	public void fishHelp(String sender, boolean isOp) {
 		String fishMessage = "!fish - Try your hand at fishing! If the fish are not biting, "
 				+ "wait a bit and try again.";
 		if (maxFishers > 1) {
@@ -279,7 +312,8 @@ public class FishHandler {
 		}
 
 		bot.sendNotice(sender, fishMessage);
-		bot.sendNotice(sender, "!reel - When a fish is on your line, "
+		if (maxReelWait > 0)
+			bot.sendNotice(sender, "!reel - When a fish is on your line, "
 				+ "!reel it in before it gets away!");
 		bot.sendNotice(sender,
 				"!fishstats - See some statistics of the total fish caught.");
@@ -289,6 +323,15 @@ public class FishHandler {
 		bot.sendNotice(sender,
 				"!fishexport - Save the fish database as a CSV file "
 						+ "for viewing in programs such as Microsoft Excel.");
+		
+		if (isOp) {
+			bot.sendNotice(sender, bot.getName() + " set maxfishers x - " +
+					"Sets the maximum number of fishers, x, allowed to fish at one time. " +
+					"(" + maxFishers + ")");
+			bot.sendNotice(sender, bot.getName() + " set maxreelwait x - " +
+					"Sets the maximum waiting time in seconds, x, for a bite. " +
+					"(" + maxReelWait + ")");
+		}
 	}
 
 	public synchronized void saveFish() throws FileNotFoundException {
@@ -296,18 +339,29 @@ public class FishHandler {
 
 		// csv writers are for noobs
 		output = new PrintStream(fishData);
-		output.println("\"Date caught\",\"Catcher\",\"Type\",\"Weight\","
-				+ "\"Reaction Time (ms)\",\"Last updated: "
-				+ lastUpdate.toString() + "\"");
+		output.println("\"Date caught\",\"Catcher\",\"Type\",\"Weight\"," + 
+				"\"Reaction time (ms)\",\"Bait used\",\"Unmodified weight\"," +
+				"\"Last updated: " + lastUpdate.toString() + "\"");
 		for (Fish f : fm.getFishList()) {
-			output.println(f.dateCaught() + "," + f.catcher() + "," + f.name()
-					+ "," + f.weight() + "," + f.reactionTime());
+			output.println("\"" + f.dateCaught() + "\",\"" + f.catcher() + "\",\"" + f.name()
+					+ "\",\"" + f.weight() + "\",\"" + f.reactionTime() + "\",\"" + 
+					f.baitUsed() + "\",\"" + 
+					Fish.truncate(f.weight() / f.baitUsed().strength()) + "\"");
 		}
 	}
-
-	public FishManager getFishManager() {
-		return fm;
+	
+	
+	public void giveBaitTo(String target, String channel, String sender) {
+		if (Arrays.asList(bot.getUsers(channel)).contains(target)) {
+			int i = rand.nextInt(BaitStrengths.BAITS.length);
+			Bait b = BaitStrengths.BAITS[i];
+			baitsMap.put(target, b);
+			
+			bot.sendNotice(sender, b.name() + " given to " + target);
+			bot.sendNotice(target, sender + " gave you a " + b.name() + "!");
+		}
 	}
+	
 
 	public int getMaxFishers() {
 		return maxFishers;
