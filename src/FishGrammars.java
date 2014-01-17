@@ -24,7 +24,7 @@ public class FishGrammars {
 		"<fish_avg> ::= <adj_avg> <fish> | <adj_xmas> <fish> | <adj_avg> <fish_xmas> | <adj_xmas> <fish_xmas>",
 
 		"<adj_xmas> ::= chilly | festive | frosty | gift-giving | happy | icy | jingling | jolly | merry | naughty | nice | nippy | snowy | red-nosed | wintry",
-		"<fish_xmas> ::= Christmasfish | elffish | iciclefish | jinglefish | ornamentfish | presentfish | reindeerfish | Santafish | sleighfish | snowfish | snowmanfish | tinselfish | winterfish"
+		"<fish_xmas> ::= Christmasfish | elffish | iciclefish | Grinchfish | jinglefish | ornamentfish | presentfish | reindeerfish | Santafish | Scroogefish | sleighfish | snowfish | snowmanfish | tinselfish | winterfish"
 	};
 	
 	private static final String[] FISH_GRAMMAR_DEFAULT = new String[] {
