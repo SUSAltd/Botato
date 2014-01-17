@@ -15,18 +15,20 @@ public class Fish implements Comparable<Fish> {
 	private String catcher;
 	private double weight;
 	private String dateCaught;
-	private long reactionTime;
+	private long reactionTime;	// in ms
+	private Bait baitUsed;
 
 	public final static double MEAN_WEIGHT = 10.0;
-	public final static double STD_DEV_WEIGHT = 4.0;
+	public final static double STD_DEV_WEIGHT = 5.0;
 	public final static int ROUND_TO_PLACES = 4;
-	private final static double VARIANCE_WEIGHT = Math.pow(STD_DEV_WEIGHT, 2);
 
 	public Fish() {
 		name = "no fish";
 		catcher = "nobody";
 		weight = 0;
 		dateCaught = "00/00/0000 0:00:00";
+		reactionTime = 0;
+		baitUsed = Bait.DEFAULT_BAIT;
 	}
 
 	/**
@@ -38,22 +40,32 @@ public class Fish implements Comparable<Fish> {
 	 * @param catcher
 	 *            - name of the catcher
 	 */
-	public Fish(String name, String catcher) {
+	public Fish(String name, String catcher, Bait bait) {
+		if (bait.strength() <= 0)
+			throw new IllegalArgumentException();
+		
 		this.name = name;
 		this.catcher = catcher;
+		
+		double varWeight = Math.pow(STD_DEV_WEIGHT, 2);
 
 		// random weight based on log-normal distribution
 		Random rand = new Random();
-		
 		double mu = Math.log(Math.pow(MEAN_WEIGHT, 2) /
-				Math.sqrt(VARIANCE_WEIGHT + Math.pow(MEAN_WEIGHT, 2)));
+				Math.sqrt(varWeight + Math.pow(MEAN_WEIGHT, 2)));
 		double sigma = Math.sqrt(Math.log(
-				1 + VARIANCE_WEIGHT / Math.pow(MEAN_WEIGHT, 2)));
-		weight = truncate(Math.pow(Math.E,
-				mu + sigma * rand.nextGaussian()));
+				1 + varWeight / Math.pow(MEAN_WEIGHT, 2)));
+		double w = Math.pow(Math.E, mu + sigma * rand.nextGaussian());
 
 		Date date = new Date();
-		dateCaught = String.format("%tF %<tT", date);
+		this.weight = truncate(w * bait.strength());
+		this.dateCaught = String.format("%tF %<tT", date);
+		this.reactionTime = 0;
+		this.baitUsed = bait;
+	}
+	
+	public Fish(String name, String catcher) {
+		this(name, catcher, Bait.DEFAULT_BAIT);
 	}
 
 	/**
@@ -73,16 +85,8 @@ public class Fish implements Comparable<Fish> {
 	 *             if weight is negative, which leads to the untimely demise of
 	 *             the universe
 	 */
-	public Fish(String name, String catcher, double weight, Date date, long reactionTime) {
-		if (weight < 0) {
-			// Universe.selfDestruct();
-			throw new IllegalArgumentException();
-		}
-		this.name = name;
-		this.catcher = catcher;
-		this.weight = truncate(weight);
-		this.dateCaught = String.format("%tF %<tT", date);
-		this.reactionTime = reactionTime;
+	public Fish(String name, String catcher, double weight, Date date, long reactionTime, Bait baitUsed) {
+		this(name, catcher, truncate(weight), String.format("%tF %<tT", date), reactionTime, baitUsed);
 	}
 	
 	/**
@@ -102,7 +106,7 @@ public class Fish implements Comparable<Fish> {
 	 *             if weight is negative, which leads to the untimely demise of
 	 *             the universe
 	 */
-	public Fish(String name, String catcher, double weight, String date, long reactionTime) {
+	public Fish(String name, String catcher, double weight, String date, long reactionTime, Bait baitUsed) {
 		if (weight < 0) {
 			// Universe.selfDestruct();
 			throw new IllegalArgumentException();
@@ -112,6 +116,7 @@ public class Fish implements Comparable<Fish> {
 		this.weight = truncate(weight);
 		this.dateCaught = date;
 		this.reactionTime = reactionTime;
+		this.baitUsed = baitUsed;
 	}
 
 	/**
@@ -169,6 +174,11 @@ public class Fish implements Comparable<Fish> {
 		reactionTime = millis;
 	}
 	
+	public Bait baitUsed() {
+		return baitUsed;
+	}
+	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -220,9 +230,9 @@ public class Fish implements Comparable<Fish> {
 		System.out.println();
 
 		Calendar c = Calendar.getInstance();
-		c.set(2013, 9 - 1, 7, 15, 23, 35);
+		c.set(1994, 9 - 1, 7, 15, 23, 35);
 
-		Fish fish2 = new Fish("Magikarp", "SUSAltd", 13.874511, c.getTime(), 0);
+		Fish fish2 = new Fish("Magikarp", "SUSAltd", 13.874511, c.getTime(), 0, Bait.DEFAULT_BAIT);
 		System.out.println("Fish 2");
 		System.out.println("    Name:        " + fish2.name());
 		System.out.println("    Caught by:   " + fish2.catcher());
@@ -234,7 +244,7 @@ public class Fish implements Comparable<Fish> {
 		int sampleSize = 100;
 		double maxWeight = 0.0;
 		for (int i = 0; i < sampleSize; i++) {
-			Fish f = new Fish("fish", "me");
+			Fish f = new Fish("fish", "me", Bait.DEFAULT_BAIT);
 			totalWeight += f.weight();
 			if (f.weight() > maxWeight) {
 				maxWeight = f.weight();
