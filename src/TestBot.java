@@ -7,17 +7,17 @@ public class TestBot extends PircBot {
 	private Scanner input;
 	private Random rand;
 	
-	InputHandler ih;
+	private InputHandler ih;
 	
 	private List<String> ops;
 	private List<String> hello;
 
-	public TestBot(File fishGrammarFile) throws IOException {
+	public TestBot(File fishData) throws IOException {
 		ops = fileToList(new File("ops.txt"));
 		hello = fileToList(new File("data/hello.susa"));
 		
 		rand = new Random();
-		ih = new InputHandler(this, rand, ops, hello);
+		ih = new InputHandler(this, rand, ops, hello, fishData);
 	}
 
 	public void onKick(String channel, String kickerNick, String kickerLogin,
@@ -57,7 +57,6 @@ public class TestBot extends PircBot {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		File fishGrammarFile = null;
 		
 		Properties p = new Properties();
 		try {
@@ -73,8 +72,9 @@ public class TestBot extends PircBot {
 		String[] altNicks = n.split("\\s?,\\s?");
 		String channel = p.getProperty("channel");
 		String server = p.getProperty("server");
+		String fdFile = p.getProperty("fish_data", "data/fishdata.csv");
 		
-		TestBot bot = new TestBot(fishGrammarFile);
+		TestBot bot = new TestBot(new File(fdFile));
 		bot.setVerbose(true);
 		bot.setName(nick);
 
