@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
@@ -9,27 +10,20 @@ public class InputHandler {
 	List<String> hello;
 	
 	FishHandler fh;
-	FishManager fm;
 	
-	public InputHandler(TestBot bot, Random rand, List<String> ops, List<String> hello) throws IOException {
+	public InputHandler(TestBot bot, Random rand, List<String> ops, List<String> hello, File fishData) throws IOException {
 		this.bot = bot;
 		this.rand = rand;
 		this.ops = ops;
 		this.hello = hello;
 		
-		this.fh = new FishHandler(bot);
-		this.fm = fh.getFishManager();
+		this.fh = new FishHandler(bot, fishData);
 	}
 	
 	public void onMessage(String channel, String sender, String message) {
 		// !fish
 		if (message.equals("!fish")) {
-			if (System.currentTimeMillis() - fm.getLastFishCatchTime() >
-					(30 + rand.nextInt(30)) * 1000) {
-				fh.fish(channel, sender, message);
-			} else {
-				bot.sendNotice(sender, "The fish aren't biting right now!");
-			}
+			fh.fish(channel, sender, message);
 		
 		// !reel
 		} else if (message.equals("!reel")) {
@@ -45,7 +39,7 @@ public class InputHandler {
 			
 		// !fish help
 		} else if (message.equals("!fish help")) {
-			fh.fishHelp(sender);
+			fh.fishHelp(sender, ops.contains(sender));
 
 		// directed at bot
 		} else if (message.startsWith(bot.getNick() + " ")) {
@@ -107,5 +101,4 @@ public class InputHandler {
 			}
 		}
 	}
-
 }
