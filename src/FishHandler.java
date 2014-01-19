@@ -188,7 +188,7 @@ public class FishHandler {
 														// too soon since last fish was caught
 			bot.sendNotice(sender, "The fish aren't biting right now!");
 			
-		} else if (!baitsMap.containsKey(sender) && rand.nextDouble() < 0.01) {
+		} else if (!baitsMap.containsKey(sender) && rand.nextDouble() < 0.02) {
 			// you caught a bait
 			Bait b = BaitStrengths.BAITS[rand.nextInt(BaitStrengths.BAITS.length)];
 			baitsMap.put(sender, b);
@@ -216,6 +216,9 @@ public class FishHandler {
 				newName = fishGrammar.generate("<fish_avg>", 1)[0];
 			}
 
+			if (!newFish.baitUsed().equals(Bait.DEFAULT_BAIT))
+				newName = "baited " + newName;
+			
 			newFish.setName(newName);
 
 			FisherThread ft = new FisherThread(sender, channel, newFish);
