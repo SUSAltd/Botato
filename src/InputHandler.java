@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -8,6 +9,7 @@ public class InputHandler {
 	Random rand;
 	List<String> ops;
 	List<String> hello;
+	HashMap<String, Thread> commands;
 	
 	FishHandler fh;
 	
@@ -22,7 +24,7 @@ public class InputHandler {
 	
 	public void onMessage(String channel, String sender, String message) {
 		// !fish
-		if (message.equals("!fish")) {
+		if (message.equals("!fish") || message.equals("!fosh")) {
 			fh.fish(channel, sender, message);
 		
 		// !reel
@@ -81,6 +83,14 @@ public class InputHandler {
 					
 					fh.setMaxReelWait(num);
 					bot.sendNotice(sender, "Maximum reel wait time changed to " + num + " sec");
+				
+				// impatience
+				} else if (command.matches("impatience \\d+")) {
+					String n = command.substring(command.indexOf(' ') + 1);
+					int num = Integer.parseInt(n);
+					
+					fh.setImpatienceLimit(num);
+					bot.sendNotice(sender, "Impatience limit changed to " + num + " tries");
 				}
 				
 			// directed at bot

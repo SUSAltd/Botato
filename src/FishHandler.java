@@ -20,6 +20,7 @@ public class FishHandler {
 	private Random rand;
 	private HashMap<String, Thread> fishers;
 	private HashMap<String, Bait> baitsMap;
+	private HashMap<String, Integer> impatience;
 	private GrammarSolver fishGrammar;
 	private File fishData;
 
@@ -29,16 +30,19 @@ public class FishHandler {
 	private FishManager fm;
 
 	private int maxFishers = 1; // max people fishing at once: 0 or less for no
-								// maximum
+									// maximum
 	private int maxReelWait = 0; // max amount of time to wait for fish in
 									// seconds: 0 or less for no !reel
-	private int baseCoolDown = 30;
+	private int baseCoolDown = 30; // minimum amount of wait (s) before another fish
+	
+	private int impatienceLimit = 5; // max number of "fish aren't biting" before kick
 
 	public FishHandler(TestBot bot, File fishData) throws IOException {
 		this.bot = bot;
 		this.rand = new Random();
 		this.fishers = new HashMap<String, Thread>();
 		this.baitsMap = new HashMap<String, Bait>();
+		this.impatience = new HashMap<String, Integer>();
 		String[] g = FishGrammars.getFishGrammar(FishGrammars.Holiday.DEFAULT);
 		List<String> grammar = Arrays.asList(g);
 		this.fishGrammar = new GrammarSolver(grammar);
@@ -141,7 +145,7 @@ public class FishHandler {
 			else
 				myFish.setReactionTime(0);
 			
-			int place = 11;
+			int place = 11; // initialize the variable
 			try {
 				place = fm.catchFish(myFish) + 1;
 				saveFish();
@@ -150,7 +154,7 @@ public class FishHandler {
 			}
 
 			String outMessage = sender + " caught a";
-			if (myFish.name().matches("[aeiouAEIOU].*"))
+			if (myFish.name().matches("[aeiou].*"))
 				outMessage += "n";
 			outMessage += " " + myFish.name() + " weighing " + myFish.weight()
 					+ " lbs.";
@@ -186,7 +190,17 @@ public class FishHandler {
 		} else if (System.currentTimeMillis() - fm.getLastFishCatchTime() <
 					(baseCoolDown + rand.nextInt(baseCoolDown)) * 1000) { 
 														// too soon since last fish was caught
+			if (!impatience.containsKey(sender)) {
+				impatience.put(sender, 0);
+			}
+			int l = impatience.get(sender);
+			l++;
+			impatience.put(sender, l);
 			bot.sendNotice(sender, "The fish aren't biting right now!");
+			
+			if (l >= impatienceLimit) {
+				bot.kick(channel, sender, "They're still not biting!");
+			}
 			
 		} else if (!baitsMap.containsKey(sender) && rand.nextDouble() < 0.02) {
 			// you caught a bait
@@ -197,6 +211,7 @@ public class FishHandler {
 			
 		} else {
 			// prepare a fish
+			impatience.clear();
 			
 			Fish newFish;
 			if (baitsMap.containsKey(sender)) {
@@ -208,7 +223,9 @@ public class FishHandler {
 			String newName;
 
 			// decide what adjective to attach to the fish
-			if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
+			if (newFish.weight() > Fish.MEAN_WEIGHT + 10 * Fish.STD_DEV_WEIGHT) {
+				newName = fishGrammar.generate("<fish_huge>", 1)[0];
+			} else if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
 				newName = fishGrammar.generate("<fish_big>", 1)[0];
 			} else if (newFish.weight() < Fish.MEAN_WEIGHT - 1.25 * Fish.STD_DEV_WEIGHT) {
 				newName = fishGrammar.generate("<fish_sml>", 1)[0];
@@ -354,14 +371,12 @@ public class FishHandler {
 	}
 	
 	
-	public void giveBaitTo(String target, String channel, String sender) {
+	public void giveBaitTo(String target, String channel, String sender, Bait bait) {
 		if (Arrays.asList(bot.getUsers(channel)).contains(target)) {
-			int i = rand.nextInt(BaitStrengths.BAITS.length);
-			Bait b = BaitStrengths.BAITS[i];
-			baitsMap.put(target, b);
+			baitsMap.put(target, bait);
 			
-			bot.sendNotice(sender, b.name() + " given to " + target);
-			bot.sendNotice(target, sender + " gave you a " + b.name() + "!");
+			bot.sendNotice(sender, bait.name() + " given to " + target);
+			bot.sendNotice(target, sender + " gave you a " + bait.name() + "!");
 		}
 	}
 	
@@ -380,5 +395,21 @@ public class FishHandler {
 
 	public void setMaxReelWait(int maxReelWait) {
 		this.maxReelWait = maxReelWait;
+	}
+
+	public int getBaseCoolDown() {
+		return baseCoolDown;
+	}
+
+	public void setBaseCoolDown(int baseCoolDown) {
+		this.baseCoolDown = baseCoolDown;
+	}
+
+	public int getImpatienceLimit() {
+		return impatienceLimit;
+	}
+
+	public void setImpatienceLimit(int impatienceLimit) {
+		this.impatienceLimit = impatienceLimit;
 	}
 }
