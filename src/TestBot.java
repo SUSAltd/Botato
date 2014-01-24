@@ -11,8 +11,11 @@ public class TestBot extends PircBot {
 	
 	private List<String> ops;
 	private List<String> hello;
+	
+	private static boolean isConnected;
 
 	public TestBot(File fishData) throws IOException {
+		
 		ops = fileToList(new File("ops.txt"));
 		hello = fileToList(new File("data/hello.susa"));
 		
@@ -26,8 +29,14 @@ public class TestBot extends PircBot {
 	}
 	
 	public void onDisconnect() {
+		isConnected = false;
 		int count = 0;
-		while(!this.isConnected() || count < 60) { // makes 60 attempts to reconnect
+		try {
+			Thread.sleep(2000); // wait one second, prevents "reconnect too fast" error
+		} catch (InterruptedException e1) {
+			// nothing
+		}
+		while (!isConnected && count < 60) { // makes 60 attempts to reconnect
 			count++;
 			System.out.println("Attempting to reconnect: attempt #" + count);
 			try {
@@ -44,16 +53,6 @@ public class TestBot extends PircBot {
 			String hostname, String message) {
 		
 		ih.onMessage(channel, sender, message);
-	}
-	
-	private List<String> fileToList(File fileIn) throws IOException {
-		List<String> list = new ArrayList<String>();
-		fileIn.createNewFile();
-		input = new Scanner(fileIn);
-		while (input.hasNextLine()) {
-			list.add(input.nextLine());
-		}
-		return list;
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -101,6 +100,18 @@ public class TestBot extends PircBot {
 			}
 		}
 		
+		isConnected = true;
+		
 		bot.joinChannel(channel);
+	}
+	
+	private List<String> fileToList(File fileIn) throws IOException {
+		List<String> list = new ArrayList<String>();
+		fileIn.createNewFile();
+		input = new Scanner(fileIn);
+		while (input.hasNextLine()) {
+			list.add(input.nextLine());
+		}
+		return list;
 	}
 }
