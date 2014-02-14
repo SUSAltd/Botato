@@ -23,6 +23,7 @@ public class FishHandler {
 	private HashMap<String, Integer> impatience;
 	private GrammarSolver fishGrammar;
 	private File fishData;
+	private int coolDown;
 
 	private PrintStream output;
 	private Scanner input;
@@ -35,7 +36,7 @@ public class FishHandler {
 									// seconds: 0 or less for no !reel
 	private int baseCoolDown = 30; // minimum amount of wait (s) before another fish
 	
-	private int impatienceLimit = 5; // max number of "fish aren't biting" before kick
+	private int impatienceLimit = 3; // max number of "fish aren't biting" before kick
 
 	public FishHandler(TestBot bot, File fishData) throws IOException {
 		this.bot = bot;
@@ -43,7 +44,7 @@ public class FishHandler {
 		this.fishers = new HashMap<String, Thread>();
 		this.baitsMap = new HashMap<String, Bait>();
 		this.impatience = new HashMap<String, Integer>();
-		String[] g = FishGrammars.getFishGrammar(FishGrammars.Holiday.DEFAULT);
+		String[] g = FishGrammars.getFishGrammar(FishGrammars.Holiday.VALENTINE);
 		List<String> grammar = Arrays.asList(g);
 		this.fishGrammar = new GrammarSolver(grammar);
 
@@ -72,6 +73,7 @@ public class FishHandler {
 			}
 		}
 
+		this.coolDown = 0;
 		this.fm = new FishManager(fishList);
 	}
 
@@ -171,7 +173,7 @@ public class FishHandler {
 				bot.sendMessage(channel, Colors.BOLD + Colors.RED
 						+ "NEW RECORD!");
 			}
-			if (place <= 10) {
+			if (place <= fm.getFishList().size() * 0.01 || place <= 10) { // top 1% or top 10
 				bot.sendMessage(channel,
 						myFish.catcher() + "'s " + myFish.name()
 						+ " broke the nr " + place + " record weight!");
@@ -179,17 +181,18 @@ public class FishHandler {
 		}
 	}
 
-	public void fish(String channel, String sender, String message) {
+	public void fish(String channel, String sender) {
 		if (fishers.containsKey(sender)) { // you are already fishing
 			bot.sendNotice(sender, "You already have a line out.");
-			
-		} else if (maxFishers != 0 && fishers.size() >= maxFishers) { // too many fishers
+		
+		// too many fishers
+		} else if (maxFishers != 0 && fishers.size() >= maxFishers) { 
 			bot.sendNotice(sender,
 					"There ain't enough room around here for another fisher.");
 			
+		// too soon since last fish was caught
 		} else if (System.currentTimeMillis() - fm.getLastFishCatchTime() <
-					(baseCoolDown + rand.nextInt(baseCoolDown)) * 1000) { 
-														// too soon since last fish was caught
+					coolDown) {
 			if (!impatience.containsKey(sender)) {
 				impatience.put(sender, 0);
 			}
@@ -202,16 +205,20 @@ public class FishHandler {
 				bot.kick(channel, sender, "They're still not biting!");
 			}
 			
-		} else if (!baitsMap.containsKey(sender) && rand.nextDouble() < 0.02) {
+		} else if (!baitsMap.containsKey(sender) && rand.nextDouble() < 0.04) {	// 4% chance of bait
 			// you caught a bait
 			Bait b = BaitStrengths.BAITS[rand.nextInt(BaitStrengths.BAITS.length)];
 			baitsMap.put(sender, b);
 			
 			bot.sendMessage(channel, "What's this? " + sender + " found " + b.name() + "!");
-			
+
+		// prepare a fish
 		} else {
-			// prepare a fish
+			
+			// clear the kick list
 			impatience.clear();
+			
+			coolDown = (baseCoolDown + rand.nextInt(baseCoolDown)) * 1000;
 			
 			Fish newFish;
 			if (baitsMap.containsKey(sender)) {
@@ -219,6 +226,7 @@ public class FishHandler {
 				baitsMap.remove(sender);
 			} else {
 				newFish = new Fish("fish", sender);
+				// newFish.setWeight(65.3482); // testing purposes
 			}
 			String newName;
 
@@ -250,7 +258,7 @@ public class FishHandler {
 		}
 	}
 
-	public void reel(String channel, String sender, String message) {
+	public void reel(String channel, String sender) {
 		if (fishers.containsKey(sender)) {
 			Thread ftt = fishers.remove(sender);
 			ftt.interrupt();
@@ -259,14 +267,13 @@ public class FishHandler {
 		}
 	}
 
-	public void fishStats(String sender, String message) {
+	public void fishStats(String sender, String target) {
 		int tot;
 		double avg;
 		Fish big;
 		Fish sml;
 
-		if (message.length() > 11 && message.charAt(10) == ' ') {
-			String target = message.substring(11);
+		if (!target.isEmpty()) {
 			try {
 				tot = fm.getFishList(target).size();
 				avg = fm.getAverageWeight(target);
@@ -319,9 +326,11 @@ public class FishHandler {
 
 	public void fishExport(String sender) {
 		bot.dccSendFile(fishData, sender, 120000);
+		bot.sendNotice(sender, "The DCC file transfer probably won't work. " +
+				"In the meantime, use https://www.dropbox.com/s/7xwpovmqycc4d37/fishdata.csv");
 	}
 
-	public void fishHelp(String sender, boolean isOp) {
+	public void fishHelp(String sender) {
 		String fishMessage = "!fish - Try your hand at fishing! If the fish are not biting, "
 				+ "wait a bit and try again.";
 		if (maxFishers > 1) {
@@ -343,15 +352,6 @@ public class FishHandler {
 		bot.sendNotice(sender,
 				"!fishexport - Save the fish database as a CSV file "
 						+ "for viewing in programs such as Microsoft Excel.");
-		
-		if (isOp) {
-			bot.sendNotice(sender, bot.getName() + " set maxfishers x - " +
-					"Sets the maximum number of fishers, x, allowed to fish at one time. " +
-					"(" + maxFishers + ")");
-			bot.sendNotice(sender, bot.getName() + " set maxreelwait x - " +
-					"Sets the maximum waiting time in seconds, x, for a bite. " +
-					"(" + maxReelWait + ")");
-		}
 	}
 
 	public synchronized void saveFish() throws FileNotFoundException {
