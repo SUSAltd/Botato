@@ -1,11 +1,4 @@
 /*
- * Ray Wang
- * CSE 143 AW
- * TA Adam Wolf
- * ----
- * Assignment 2
- * 5/9/2013
- * ----
  * This program constructs a GrammarSolver object that generates random
  * sentences based on a set of rules defined by a given grammar.
  */
