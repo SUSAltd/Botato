@@ -156,6 +156,13 @@ public class Fish implements Comparable<Fish> {
 	}
 
 	/**
+	 * @param weight the weight to set
+	 */
+	public void setWeight(double weight) {
+		this.weight = weight;
+	}
+
+	/**
 	 * Returns the date on which the fish was caught in the format
 	 * <code>yyyy-MM-dd hh:mm:ss</code>.
 	 * 
