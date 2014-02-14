@@ -1,15 +1,14 @@
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.SortedMap;
 import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 
 public class FishManager {
 	private List<Fish> fishList;
-	private SortedMap<String, SortedSet<Fish>> fishMap;
+	private HashMap<String, SortedSet<Fish>> fishMap;
 	private Fish biggestFish;
 	private Fish smlFish;
 	private double avgFishWeight;
@@ -18,7 +17,7 @@ public class FishManager {
 	
 	public FishManager(List<Fish> fishList) {
 		this.fishList = new ArrayList<Fish>(fishList);
-		fishMap = new TreeMap<String, SortedSet<Fish>>();
+		fishMap = new HashMap<String, SortedSet<Fish>>();
 		lastFishCatchTime = 0;
 		lastCaughtIsBiggest = false;
 		
@@ -27,23 +26,25 @@ public class FishManager {
 		if (fishList.isEmpty()) {
 			biggestFish = new Fish();
 			smlFish = new Fish();
+			
+			avgFishWeight = 0.0;
 		} else {
 			biggestFish = fishList.get(0);
 			smlFish = fishList.get(fishList.size() - 1);
-		}
-		
-		double cumSum = 0;
-		for (Fish f : fishList) {
-			if (!fishMap.containsKey(f.catcher())) {
-				fishMap.put(f.catcher(), new TreeSet<Fish>());
-			}
-			fishMap.get(f.catcher()).add(f);
 			
-			cumSum += f.weight();
+			double cumSum = 0;
+			for (Fish f : fishList) {
+				if (!fishMap.containsKey(f.catcher())) {
+					fishMap.put(f.catcher(), new TreeSet<Fish>());
+				}
+				fishMap.get(f.catcher()).add(f);
+				
+				cumSum += f.weight();
+			}
+			
+			avgFishWeight = cumSum / fishList.size();
+			avgFishWeight = Fish.truncate(avgFishWeight);
 		}
-		
-		avgFishWeight = cumSum / fishList.size();
-		avgFishWeight = Fish.truncate(avgFishWeight);
 	}
 	
 	public int catchFish(Fish newFish) {
@@ -57,7 +58,8 @@ public class FishManager {
 		if (newFish.weight() > biggestFish.weight()) {
 			biggestFish = newFish;
 			lastCaughtIsBiggest = true;
-		} else if (newFish.weight() < smlFish.weight()) {
+		}
+		if (newFish.weight() < smlFish.weight()) {
 			smlFish = newFish;
 		}
 		
