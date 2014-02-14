@@ -9,18 +9,20 @@ public class TestBot extends PircBot {
 	
 	private InputHandler ih;
 	
-	private List<String> ops;
+	private HashSet<String> ops;
+	private HashSet<String> blacklist;
 	private List<String> hello;
 	
 	private static boolean isConnected;
 
 	public TestBot(File fishData) throws IOException {
 		
-		ops = fileToList(new File("ops.txt"));
+		ops = fileToSet(new File("ops.txt"));
+		blacklist = fileToSet(new File("blacklist.txt"));
 		hello = fileToList(new File("data/hello.susa"));
 		
 		rand = new Random();
-		ih = new InputHandler(this, rand, ops, hello, fishData);
+		ih = new InputHandler(this, ops, hello, fishData);
 	}
 
 	public void onKick(String channel, String kickerNick, String kickerLogin,
@@ -51,8 +53,12 @@ public class TestBot extends PircBot {
 
 	public void onMessage(String channel, String sender, String login,
 			String hostname, String message) {
-		
-		ih.onMessage(channel, sender, message);
+		if (!blacklist.contains(sender))
+			ih.onMessage(channel, sender, message);
+	}
+	
+	public void onPrivateMessage(String sender, String login, String hostname, String message) {
+		ih.onPrivateMessage(sender, message);
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -101,8 +107,19 @@ public class TestBot extends PircBot {
 		}
 		
 		isConnected = true;
-		
+
+		bot.identify("piiscool");
 		bot.joinChannel(channel);
+	}
+	
+	private HashSet<String> fileToSet(File fileIn) throws IOException {
+		HashSet<String> set = new HashSet<String>();
+		fileIn.createNewFile();
+		input = new Scanner(fileIn);
+		while (input.hasNextLine()) {
+			set.add(input.nextLine());
+		}
+		return set;
 	}
 	
 	private List<String> fileToList(File fileIn) throws IOException {
