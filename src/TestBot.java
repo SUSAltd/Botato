@@ -5,9 +5,8 @@ import java.io.*;
 
 public class TestBot extends PircBot {
 	private Scanner input;
-	private Random rand;
 	
-	private InputHandler ih;
+	private static InputHandler ih;
 	
 	private HashSet<String> ops;
 	private HashSet<String> blacklist;
@@ -21,7 +20,6 @@ public class TestBot extends PircBot {
 		blacklist = fileToSet(new File("blacklist.txt"));
 		hello = fileToList(new File("data/hello.susa"));
 		
-		rand = new Random();
 		ih = new InputHandler(this, ops, hello, fishData);
 	}
 
@@ -45,8 +43,8 @@ public class TestBot extends PircBot {
 				// try to reconnect every thirty seconds
 				main(null);
 				Thread.sleep(1000 * 30);
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (IOException | InterruptedException e) {
+				// nothing I guess
 			}
 		}
 	}
@@ -55,6 +53,10 @@ public class TestBot extends PircBot {
 			String hostname, String message) {
 		if (!blacklist.contains(sender))
 			ih.onMessage(channel, sender, message);
+	}
+	
+	public void onNickChange(String oldNick, String login, String hostname, String newNick) {
+		ih.onNickChange(oldNick, newNick);
 	}
 	
 	public void onPrivateMessage(String sender, String login, String hostname, String message) {
@@ -101,12 +103,13 @@ public class TestBot extends PircBot {
 						// do nothing
 					}
 				}
-			} catch (IOException | IrcException e) {
-				System.err.println("Unable to connect to server");
+			} catch (IrcException e) {
+				System.out.println("Unable to connect to server ");
 			}
 		}
 		
 		isConnected = true;
+		ih.refreshCommands();
 
 		bot.joinChannel(channel);
 	}
