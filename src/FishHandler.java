@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +25,7 @@ public class FishHandler {
 	private GrammarSolver fishGrammar;
 	private File fishData;
 	private int coolDown;
+	private Calendar c;
 
 	private PrintStream output;
 	private Scanner input;
@@ -44,7 +46,7 @@ public class FishHandler {
 		this.fishers = new HashMap<String, Thread>();
 		this.baitsMap = new HashMap<String, Bait>();
 		this.impatience = new HashMap<String, Integer>();
-		String[] g = FishGrammars.getFishGrammar(FishGrammars.Holiday.VALENTINE);
+		String[] g = FishGrammars.getFishGrammar(FishGrammars.Holiday.DEFAULT);
 		List<String> grammar = Arrays.asList(g);
 		this.fishGrammar = new GrammarSolver(grammar);
 
@@ -231,14 +233,30 @@ public class FishHandler {
 			String newName;
 
 			// decide what adjective to attach to the fish
+			c = Calendar.getInstance();
 			if (newFish.weight() > Fish.MEAN_WEIGHT + 10 * Fish.STD_DEV_WEIGHT) {
 				newName = fishGrammar.generate("<fish_huge>", 1)[0];
-			} else if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
-				newName = fishGrammar.generate("<fish_big>", 1)[0];
-			} else if (newFish.weight() < Fish.MEAN_WEIGHT - 1.25 * Fish.STD_DEV_WEIGHT) {
-				newName = fishGrammar.generate("<fish_sml>", 1)[0];
+				
+			} else if (c.get(Calendar.HOUR) == 4 && c.get(Calendar.MINUTE) == 20) {
+				if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
+					newName = fishGrammar.generate("<fish_big_420>", 1)[0];
+					
+				} else if (newFish.weight() < Fish.MEAN_WEIGHT - 1.25 * Fish.STD_DEV_WEIGHT) {
+					newName = fishGrammar.generate("<fish_sml_420>", 1)[0];
+					
+				} else {
+					newName = fishGrammar.generate("<fish_avg_420>", 1)[0];
+				}
 			} else {
-				newName = fishGrammar.generate("<fish_avg>", 1)[0];
+				if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
+					newName = fishGrammar.generate("<fish_big>", 1)[0];
+					
+				} else if (newFish.weight() < Fish.MEAN_WEIGHT - 1.25 * Fish.STD_DEV_WEIGHT) {
+					newName = fishGrammar.generate("<fish_sml>", 1)[0];
+					
+				} else {
+					newName = fishGrammar.generate("<fish_avg>", 1)[0];
+				}
 			}
 
 			if (!newFish.baitUsed().equals(Bait.DEFAULT_BAIT))
