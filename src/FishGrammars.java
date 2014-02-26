@@ -17,16 +17,14 @@ public class FishGrammars {
 		"<adj_huge_2> ::= as was foretold long ago | for the history books | marked for an eternity of greatness | of legends untold | spoken of only as a myth | the likes of which have never been seen before | thought to be nothing more than a sailor's tale | whose name will only ever be uttered with an air of fear",
 		
 		"<fish> ::= aholehole | albacore | algae-eater | alligatorfish | anchovy | anenomefish | angelfish | angler | archerfish | armorfish | bandfish | barracuda | barreleye | bass | beardfish | blackfish | bonytail chub | buffalofish | butterflyfish | cardinalfish | carp | carpsucker | catfish | cavefish | cherubfish | chubsucker | clownfish | cod | coelacanth | coffinfish | combfish | cornetfish | cutlassfish | damselfish | dartfish | dhufish | dogfish | dottyback | dragonet | dragonfish | eagle ray | eel | electric red | electric ray | elephant fish | elephantnose fish | fangtooth | featherback | filefish | fingerfish | fish | flagfin | flagfish | flashlight fish | flathead | flounder | flyingfish | footballfish | four-eyed fish | frogfish | gibberfish | glassfish | goby | goldfish | goosefish | gourami | graveldiver | guitarfish | gulper | gunard | guppy | hagfish | halibut | handfish | hatchetfish | hawkfish | herring | hogsucker | icefish | jackfish | jawfish | jellyfish | jellynose fish | jewelfish | Jewfish | kelpfish | killifish | kingfish | knifefish | labyrinth fish | ladyfish | lampfish | lamprey | lancetfish | lanternfish | leaffish | lightfish | lionfish | lizardfish | loach | longfin | lungfish | mackerel | Mandarin fish | manefish | man-of-war fish | manefish | manta ray | marblefish | marlin | medusafish | milkfish | minnow | mudminnow | mustache triggerfish | needlefish | nibblefish | nurseryfish | oarfish | oilfish | paradise fish | parrotfish | pearlfish | pencilfish | perch | pigfish | pike | pike conger | pilotfish | pineapplefish | pineconefish | piranha | pipefish | platyfish | plunderfish | pollyfish | ponyfish | poolfish | porcupinefish | pricklefish | prowfish | pufferfish | pupfish | quillfish | rabbitfish | ragfish | rainbowfish | ray | razorfish | redfish | reedfish | ricefish | rockfish | roosterfish | ropefish | rudderfish | sabertooth fish | sablefish | sailfish | salmon | sand diver | sandfish | scabbardfish | scalyfin | scorpionfish | shark | shrimpfish | silverside | skilfish | smelt | smoothtongue | snailfish | snipefish | soldierfish | sole | spadefish | spiderfish | spikefish | spookfish | springfish | squaretail | squawfish | squirrelfish | stingfish | stingray | stonefish | sturgeon | sunfish | surgeonfish | swordfish | swordtail | tadpolefish | telescopefish | thornfish | tilefish | tonguefish | torrentfish | treefish | triggerfish | tripodfish | trout | trumpetfish | trunkfish | unicornfish | velvetfish | viperfish | waryfish | weatherfish | weeverfish | whalefish | whitefish | wormfish | x-ray fish | yellowtail | zebrafish | 39fish | caretfish | jefffish | legofish | shamanfish | nwinfish | rm -rfish | satrixfish | susafish | tejfish | tetrafish | wo4fish | zoraelfish",
+
+		"<adj_420> ::= 420 | blazed up | blazing | burning | high | lit | smoking",
+		"<fish_420> ::= 420fish | blazefish | resident of Colorado | entfish | herb | Mary Jane | potfish | tree | weedfish"
 	};
 	
 	private static final String[] FISH_ADJ_VLTN = new String[] {
 		"<adj_h> ::= amorous | dreamy | enamoring | forever alone | heart-shaped | laced | lovey-dovey | loving | lovely | luscious | perfumed | romantic | sweet | true",
 		"<fish_h> ::= box of chocolate fish | cupidfish | fish of love | heartfish | kissfish | love letter | secret admirer | Valentinefish"
-	};
-	
-	private static final String[] FISH_ADJ_4_20 = new String[] {
-		"<adj_h> ::= 420 | blazing | burning | high | lit",
-		"<fish_h> ::= 420fish | blazefish | entfish | weedfish"
 	};
 	
 	private static final String[] FISH_ADJ_HLWN = new String[] {
@@ -46,6 +44,10 @@ public class FishGrammars {
 		"<fish_sml> ::= <adj_sml> <fish> | <adj_sml> <adj> <fish>",
 		"<fish_avg> ::= <adj> <fish>",
 		
+		"<fish_big_420> ::= <adj_big> <fish_420> | <adj_big> <adj> <fish_420> | <adj_big> <adj_420> <fish> | <adj_big> <adj_420> <fish_420>",
+		"<fish_sml_420> ::= <adj_sml> <fish_420> | <adj_sml> <adj> <fish_420> | <adj_sml> <adj_420> <fish> | <adj_sml> <adj_420> <fish_420>",
+		"<fish_avg_420> ::= <adj_420> <fish> | <adj> <fish_420> | <adj_420> <fish_420>",
+		
 		"<fh2> ::= <adj> <fish> <adj_huge_2>",
 		"<fish_huge> ::= <adj_huge_1> <adj> <fish> | <fh2> | <fh2>"
 	});
@@ -55,6 +57,10 @@ public class FishGrammars {
 		"<fish_sml> ::= <adj_sml> <fish> | <adj_sml> <adj> <fish> | <adj_sml> <adj_h> <fish> | <adj_sml> <fish_h> | <adj_sml> <adj_h> <fish_h>",
 		"<fish_avg> ::= <adj> <fish> | <adj_h> <fish> | <adj> <fish_h> | <adj_h> <fish_h>",
 
+		"<fish_big_420> ::= <adj_big> <fish_420> | <adj_big> <adj> <fish_420> | <adj_big> <adj_420> <fish> | <adj_big> <adj_420> <fish_420> | <adj_big> <adj_420> <fish_h> | <adj_big> <adj_h> <fish_420>",
+		"<fish_sml_420> ::= <adj_sml> <fish_420> | <adj_sml> <adj> <fish_420> | <adj_sml> <adj_420> <fish> | <adj_sml> <adj_420> <fish_420> | <adj_sml> <adj_420> <fish_h> | <adj_sml> <adj_h> <fish_420>",
+		"<fish_avg_420> ::= <adj_420> <fish> | <adj> <fish_420> | <adj_420> <fish_420> | <adj_h> <fish_420> | <adj_420> <fish_h> | <adj_h> <fish_h>",
+		
 		"<fish_huge> ::= <adj_huge_1> <adj> <fish> | <adj_huge_1> <adj_h> <fish> | <adj_huge_1> <adj> <fish_h> | <adj_huge_1> <adj_h> <fish_h> | <adj> <fish> <adj_huge_2> | <adj_h> <fish> <adj_huge_2> | <adj> <fish_h> <adj_huge_2> | <adj_h> <fish_h> <adj_huge_2>",
 	});
 	
