@@ -14,8 +14,8 @@ public class InputHandler {
 	
 	FishHandler fh;
 	
-	public InputHandler(final TestBot bot, HashSet<String> ops, 
-			final List<String> hello, File fishData) throws IOException {
+	public InputHandler(TestBot bot, HashSet<String> ops, 
+			List<String> hello, File fishData) throws IOException {
 		this.bot = bot;
 		this.ops = ops;
 		this.hello = hello;
@@ -24,63 +24,12 @@ public class InputHandler {
 		this.rand = new Random();
 		this.fh = new FishHandler(bot, fishData);
 		
-		commands.put("!fish", new CommandThread(0) {
-			public void run() {
-				fh.fish(channel, sender);
-			}
-		});
-		commands.put("!fosh", commands.get("!fish"));
-		commands.put("!fush", commands.get("!fish"));
-		
-		commands.put("!reel", new CommandThread(0) {
-			public void run() {
-				fh.reel(channel, sender);
-			}
-		});
-		
-		commands.put("!fishstats", new CommandThread(1) {
-			public void run() {
-				if (args.length > 0) {
-					fh.fishStats(sender, args[0]);
-				} else {
-					fh.fishStats(sender, "");
-				}
-			}
-		});
-		
-		commands.put("!fishexport", new CommandThread(0) {
-			public void run() {
-				fh.fishExport(sender);
-			}
-		});
-		
-		commands.put("!fishhelp", new CommandThread(0) {
-			public void run() {
-				fh.fishHelp(sender);
-			}
-		});
-		
-		commands.put(bot.getNick(), new CommandThread(2) {
-			public void run() {
-				String prefix = bot.getNick() + " ";
-				String command = message.substring(prefix.length());
-				
-				// botate
-				if (command.equals("botate")) {
-					bot.sendAction(channel, "botate botate botate");
-					
-				// hello
-				} else if (hello.contains(command)) {
-					int r = rand.nextInt(hello.size() - 1);
-					bot.sendMessage(channel, sender + " " + hello.get(r));
-				}
-			}
-		});
+		refreshCommands();
 	}
 	
 	public void onMessage(String channel, String sender, String message) {
 		
-		String[] mSplit = message.split(" ", 2);
+		String[] mSplit = message.trim().split(" ", 2);
 
 		if (commands.containsKey(mSplit[0])) {
 			int maxArgs = commands.get(mSplit[0]).argsNum;
@@ -94,44 +43,12 @@ public class InputHandler {
 				new Thread(c).start();
 			}
 		}
-		
-
-		
-//		// !fish
-//		if (message.equals("!fish") || message.equals("!fosh")) {
-//			fh.fish(channel, sender);
-//		
-//		// !reel
-//		} else if (message.equals("!reel")) {
-//			fh.reel(channel, sender);
-//			
-//		// !fishstats
-//		} else if (message.startsWith("!fishstats")) {
-//			fh.fishStats(sender, message);
-//			
-//		// !fishexport
-//		} else if (message.equals("!fishexport")) {
-//			fh.fishExport(sender);
-//			
-//		// !fishhelp
-//		} else if (message.equals("!fishhelp")) {
-//			fh.fishHelp(sender, ops.contains(sender));
-//
-//		// directed at bot
-//		} else if (message.startsWith(bot.getNick() + " ")) {
-//			String prefix = bot.getNick() + " ";
-//			String command = message.substring(prefix.length());
-//			
-//			// botate
-//			if (command.equals("botate")) {
-//				bot.sendAction(channel, "botate botate botate");
-//				
-//			// hello
-//			} else if (hello.contains(command)) {
-//				int r = rand.nextInt(hello.size() - 1);
-//				bot.sendMessage(channel, sender + " " + hello.get(r));
-//			}
-//		}
+	}
+	
+	public void onNickChange(String oldNick, String newNick) {
+		if (newNick.equals(bot.getNick())) {
+			refreshCommands();
+		}
 	}
 	
 	public void onPrivateMessage(String sender, String message) {
@@ -203,9 +120,63 @@ public class InputHandler {
 			} else if (message.equals("refresh")) {
 				// disconnects, triggers onDisconnect(), which reconnects
 				bot.disconnect();
-			}
-			
+			}	
 		}
+	}
+	
+	public void refreshCommands() {
+		commands.clear();
+		
+		commands.put("!fish", new CommandThread(0) {
+			public void run() {
+				fh.fish(channel, sender);
+			}
+		});
+		commands.put("!fosh", commands.get("!fish"));
+		commands.put("!fush", commands.get("!fish"));
+		
+		commands.put("!reel", new CommandThread(0) {
+			public void run() {
+				fh.reel(channel, sender);
+			}
+		});
+		
+		commands.put("!fishstats", new CommandThread(1) {
+			public void run() {
+				if (args.length > 0) {
+					fh.fishStats(sender, args[0].trim());
+				} else {
+					fh.fishStats(sender, "");
+				}
+			}
+		});
+		
+		commands.put("!fishexport", new CommandThread(0) {
+			public void run() {
+				fh.fishExport(sender);
+			}
+		});
+		
+		commands.put("!fishhelp", new CommandThread(0) {
+			public void run() {
+				fh.fishHelp(sender);
+			}
+		});
+		
+		commands.put(bot.getNick(), new CommandThread(1) {
+			public void run() {
+				
+				// botate
+				if (args[0].equals("botate")) {
+					bot.sendAction(channel, "botate botate botate");
+					
+				// hello
+				} else if (hello.contains(args[0])) {
+					int r = rand.nextInt(hello.size() - 1);
+					bot.sendMessage(channel, sender + " " + hello.get(r));
+				}
+			}
+		});
 	}
 	
 	private class CommandThread implements Runnable {
