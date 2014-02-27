@@ -320,24 +320,34 @@ public class FishHandler {
 			}
 		} else {
 			tot = fm.getFishList().size();
-			avg = fm.getAverageWeight();
 			big = fm.getBiggest();
-			sml = fm.getSmallest();
-
-			bot.sendNotice(sender, "There have been a total of " + tot
-					+ " fish caught averaging " + avg + " lbs.");
-			bot.sendNotice(sender, big.catcher()
-					+ " holds the record for biggest fish with a " + big.name()
-					+ " weighing " + big.weight() + " lbs.");
-			if (big.catcher().equals(sml.catcher())) {
-				bot.sendNotice(sender, sml.catcher()
-						+ " also holds the record for smallest fish "
-						+ "with a " + sml.name() + " weighing " + sml.weight()
-						+ " lbs.");
+			
+			if (tot == 0) {
+				bot.sendNotice(sender, "Nobody has caught anything yet. " +
+						"Type !fish to be the first!");
+			} else if (tot == 1) {
+				bot.sendNotice(sender, "The only fish that has been caught is " + 
+						big.catcher() + "\'s " + big.name() + " weighing " + 
+						big.weight() + " lbs.");
 			} else {
-				bot.sendNotice(sender, "On the other end, " + sml.catcher()
-						+ " holds the record " + "for smallest fish with a "
-						+ sml.name() + " weighing " + sml.weight() + " lbs.");
+				sml = fm.getSmallest();
+				avg = fm.getAverageWeight();
+	
+				bot.sendNotice(sender, "There have been a total of " + tot
+						+ " fish caught averaging " + avg + " lbs.");
+				bot.sendNotice(sender, big.catcher()
+						+ " holds the record for biggest fish with a " + big.name()
+						+ " weighing " + big.weight() + " lbs.");
+				if (big.catcher().equals(sml.catcher())) {
+					bot.sendNotice(sender, sml.catcher()
+							+ " also holds the record for smallest fish "
+							+ "with a " + sml.name() + " weighing " + sml.weight()
+							+ " lbs.");
+				} else {
+					bot.sendNotice(sender, "On the other end, " + sml.catcher()
+							+ " holds the record " + "for smallest fish with a "
+							+ sml.name() + " weighing " + sml.weight() + " lbs.");
+				}
 			}
 		}
 	}
