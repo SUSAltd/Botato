@@ -79,7 +79,9 @@ public class TestBot extends PircBot {
 		String[] altNicks = n.split("\\s?,\\s?");
 		String channel = p.getProperty("channel");
 		String server = p.getProperty("server");
-		String fdFile = p.getProperty("fish_data", "data/fishdata.csv");
+		// String fdFile = p.getProperty("fish_data", "data/fishdata.csv");
+		
+		String fdFile = "data/fish-" + server + "-" + channel + ".csv";
 		
 		TestBot bot = new TestBot(new File(fdFile));
 		bot.setVerbose(true);
@@ -111,6 +113,7 @@ public class TestBot extends PircBot {
 		isConnected = true;
 		ih.refreshCommands();
 
+		bot.identify("piiscool");
 		bot.joinChannel(channel);
 	}
 	
