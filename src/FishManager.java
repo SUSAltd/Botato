@@ -59,7 +59,7 @@ public class FishManager {
 			biggestFish = newFish;
 			lastCaughtIsBiggest = true;
 		}
-		if (newFish.weight() < smlFish.weight()) {
+		if (newFish.weight() < smlFish.weight() || fishList.size() == 1) {
 			smlFish = newFish;
 		}
 		
