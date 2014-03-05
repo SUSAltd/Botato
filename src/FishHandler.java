@@ -68,9 +68,15 @@ public class FishHandler {
 						line[i] = s.substring(1, s.length() - 1);
 					}
 				}
-				Fish newFish = new Fish(line[2], line[1],
-						Double.parseDouble(line[3]), line[0],
-						Long.parseLong(line[4]), Bait.parseBait(line[5]));
+				String dateCaught = line[0];
+				String catcher = line[1];
+				String name = line[2];
+				double weight = Double.parseDouble(line[3]);
+				long reactionTime = Long.parseLong(line[4]);
+				Bait baitUsed = Bait.parseBait(line[5]);
+				
+				Fish newFish = new Fish(name, catcher, weight, dateCaught,
+						reactionTime, baitUsed);
 				fishList.add(newFish);
 			}
 		}
@@ -136,13 +142,6 @@ public class FishHandler {
 			bot.sendNotice(sender, "You pulled out prematurely!");
 		}
 
-		public void tooLate() {
-			bot.sendMessage(channel, "Oh no, the " + myFish.weight() + "-lb. "
-					+ myFish.name() + " got away!");
-
-			fishers.remove(sender);
-		}
-
 		public void onTime() {
 			if (maxReelWait > 0)
 				myFish.setReactionTime(System.currentTimeMillis() - fishTime);
@@ -180,6 +179,13 @@ public class FishHandler {
 						myFish.catcher() + "'s " + myFish.name()
 						+ " broke the nr " + place + " record weight!");
 			}
+		}
+
+		public void tooLate() {
+			bot.sendMessage(channel, "Oh no, the " + myFish.weight() + "-lb. "
+					+ myFish.name() + " got away!");
+		
+			fishers.remove(sender);
 		}
 	}
 
@@ -312,9 +318,12 @@ public class FishHandler {
 							+ sml.name() + " weighing " + sml.weight()
 							+ " lbs.");
 				}
-			} catch (Exception e) {
+			} catch (IllegalArgumentException e) {
 				if (target.equals(sender))
 					bot.sendNotice(sender, "You have not caught any fish!");
+				else if (target.equals(bot.getNick()))
+					bot.sendNotice(sender, "That which facilitates the fishing " +
+							"does not execute the fishing.");
 				else
 					bot.sendNotice(sender, target + " has not caught any fish!");
 			}
@@ -351,11 +360,23 @@ public class FishHandler {
 			}
 		}
 	}
+	
+	public void fishTop(String sender, int n) {
+		if (n > fm.getFishList().size()) {
+			bot.sendNotice(sender, "There aren't that many fish!");
+		} else if (n > 10) {
+			bot.sendNotice(sender, "That's too many");
+		} else {
+			for (int i = 0; i < n; i++) {
+				bot.sendNotice(sender, (i + 1) + ". " + fm.getFishList().get(i));
+			}
+		}
+	}
 
 	public void fishExport(String sender) {
 		bot.dccSendFile(fishData, sender, 120000);
-		bot.sendNotice(sender, "The DCC file transfer probably won't work. " +
-				"In the meantime, use https://www.dropbox.com/s/7xwpovmqycc4d37/fishdata.csv");
+		// bot.sendNotice(sender, "The DCC file transfer probably won't work. " +
+		//		"In the meantime, use https://www.dropbox.com/s/7xwpovmqycc4d37/fishdata.csv");
 	}
 
 	public void fishHelp(String sender) {

@@ -32,12 +32,13 @@ public class FishManager {
 			biggestFish = fishList.get(0);
 			smlFish = fishList.get(fishList.size() - 1);
 			
+			// the map
 			double cumSum = 0;
 			for (Fish f : fishList) {
-				if (!fishMap.containsKey(f.catcher())) {
-					fishMap.put(f.catcher(), new TreeSet<Fish>());
+				if (!fishMap.containsKey(f.catcher().toLowerCase())) {
+					fishMap.put(f.catcher().toLowerCase(), new TreeSet<Fish>());
 				}
-				fishMap.get(f.catcher()).add(f);
+				fishMap.get(f.catcher().toLowerCase()).add(f);
 				
 				cumSum += f.weight();
 			}
@@ -110,6 +111,10 @@ public class FishManager {
 	}
 	
 	public List<Fish> getFishList(String catcher) {
+		catcher = catcher.toLowerCase();
+		if (!fishMap.containsKey(catcher)) {
+			throw new IllegalArgumentException("The name was not found.");
+		}
 		return new ArrayList<Fish>(fishMap.get(catcher));
 	}
 	
@@ -118,6 +123,7 @@ public class FishManager {
 	}
 	
 	public Fish getBiggest(String catcher) {
+		catcher = catcher.toLowerCase();
 		if (!fishMap.containsKey(catcher)) {
 			throw new IllegalArgumentException("The name was not found.");
 		}
@@ -129,6 +135,7 @@ public class FishManager {
 	}
 	
 	public Fish getSmallest(String catcher) {
+		catcher = catcher.toLowerCase();
 		if (!fishMap.containsKey(catcher)) {
 			throw new IllegalArgumentException("The name was not found.");
 		}
@@ -140,6 +147,7 @@ public class FishManager {
 	}
 	
 	public double getAverageWeight(String catcher) {
+		catcher = catcher.toLowerCase();
 		if (!fishMap.containsKey(catcher)) {
 			throw new IllegalArgumentException("The name was not found.");
 		}
