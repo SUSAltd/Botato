@@ -113,7 +113,6 @@ public class TestBot extends PircBot {
 		isConnected = true;
 		ih.refreshCommands();
 
-		bot.identify("piiscool");
 		bot.joinChannel(channel);
 	}
 	
