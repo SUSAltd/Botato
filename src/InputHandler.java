@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -90,6 +91,16 @@ public class InputHandler {
 				}
 				
 			// say stuff
+			} else if (message.equals("save")) {
+				try {
+					fh.saveFish();
+					bot.sendMessage(sender, "Fish data saved");
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					bot.sendMessage(sender, "Could not save");
+				}
+				
+			// say stuff
 			} else if (message.startsWith("say ")) {
 				for (String s : bot.getChannels()) {
 					bot.sendMessage(s, message.substring(4));
@@ -143,10 +154,23 @@ public class InputHandler {
 		
 		commands.put("!fishstats", new CommandThread(1) {
 			public void run() {
-				if (args.length > 0) {
+				if (args.length == 1) {
 					fh.fishStats(sender, args[0].trim());
 				} else {
 					fh.fishStats(sender, "");
+				}
+			}
+		});
+		
+		commands.put("!fishtop", new CommandThread(1) {
+			public void run() {
+				if (args.length == 1) {
+					try {
+						int n = Integer.parseInt(args[0]);
+						fh.fishTop(sender, n);
+					} catch (NumberFormatException e) {
+						// nothing
+					}
 				}
 			}
 		});
