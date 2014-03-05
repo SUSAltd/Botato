@@ -206,7 +206,7 @@ public class Fish implements Comparable<Fish> {
 	 * @see java.lang.Object#toString()
 	 */
 	public String toString() {
-		return name + ", " + weight;
+		return name + ", " + weight + " (" + catcher + ")";
 	}
 
 	/**
