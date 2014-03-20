@@ -50,10 +50,10 @@ public class FishManager {
 	
 	public int catchFish(Fish newFish) {
 		fishList.add(newFish);
-		if (!fishMap.containsKey(newFish.catcher())) {
-			fishMap.put(newFish.catcher(), new TreeSet<Fish>());
+		if (!fishMap.containsKey(newFish.catcher().toLowerCase())) {
+			fishMap.put(newFish.catcher().toLowerCase(), new TreeSet<Fish>());
 		}
-		fishMap.get(newFish.catcher()).add(newFish);
+		fishMap.get(newFish.catcher().toLowerCase()).add(newFish);
 		lastCaughtIsBiggest = false;
 		
 		if (newFish.weight() > biggestFish.weight()) {

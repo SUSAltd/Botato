@@ -17,6 +17,8 @@ import java.util.Scanner;
 import org.jibble.pircbot.Colors;
 
 public class FishHandler {
+	private final double BAIT_CHANCE = 0.04;
+	
 	private TestBot bot;
 	private Random rand;
 	private HashMap<String, Thread> fishers;
@@ -213,7 +215,7 @@ public class FishHandler {
 				bot.kick(channel, sender, "They're still not biting!");
 			}
 			
-		} else if (!baitsMap.containsKey(sender) && rand.nextDouble() < 0.04) {	// 4% chance of bait
+		} else if (!baitsMap.containsKey(sender) && rand.nextDouble() < BAIT_CHANCE) {
 			// you caught a bait
 			Bait b = BaitStrengths.BAITS[rand.nextInt(BaitStrengths.BAITS.length)];
 			baitsMap.put(sender, b);
@@ -240,9 +242,12 @@ public class FishHandler {
 
 			// decide what adjective to attach to the fish
 			c = Calendar.getInstance();
+			
+			// huge fish
 			if (newFish.weight() > Fish.MEAN_WEIGHT + 10 * Fish.STD_DEV_WEIGHT) {
 				newName = fishGrammar.generate("<fish_huge>", 1)[0];
 				
+				// checks for 4:20
 			} else if (c.get(Calendar.HOUR) == 4 && c.get(Calendar.MINUTE) == 20) {
 				if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
 					newName = fishGrammar.generate("<fish_big_420>", 1)[0];
@@ -253,6 +258,8 @@ public class FishHandler {
 				} else {
 					newName = fishGrammar.generate("<fish_avg_420>", 1)[0];
 				}
+				
+				// regular fish
 			} else {
 				if (newFish.weight() > Fish.MEAN_WEIGHT + 2 * Fish.STD_DEV_WEIGHT) {
 					newName = fishGrammar.generate("<fish_big>", 1)[0];
