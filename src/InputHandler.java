@@ -181,7 +181,7 @@ public class InputHandler {
 			}
 		});
 		
-		commands.put("!fishhelp", new CommandThread(0) {
+		commands.put("!help", new CommandThread(0) {
 			public void run() {
 				fh.fishHelp(sender);
 			}
