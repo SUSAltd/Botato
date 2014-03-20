@@ -23,24 +23,23 @@ public class FishGrammars {
 	};
 	
 	private static final String[] FISH_ADJ_VLTN = new String[] {
-		"<adj_h> ::= amorous | dreamy | enamoring | forever alone | heart-shaped | laced | lovey-dovey | loving | lovely | luscious | perfumed | romantic | sweet | true",
+		"<adj_h> ::= amorous | dreamy | enamoring | forever alone | heart-shaped | laced | lovey-dovey | loving | lovely | luscious | perfumed | romantic | St. Valentine's own | sweet | true",
 		"<fish_h> ::= box of chocolate fish | cupidfish | fish of love | heartfish | kissfish | love letter | secret admirer | Valentinefish"
 	};
 	
-	private static final String[] FISH_ADJ_STPK = new String[] {
-		"<adj_h> ::= golden | Irish | lucky | rainbow",
-		"<fish_h> ::= horseshoefish"
+	private static final String[] FISH_ADJ_PTRK = new String[] {
+		"<adj_h> ::= 777 | four-leafed | golden | green | Irish | lucky | pot o' | rainbow | St. Patrick's own",
+		"<fish_h> ::= blarneyfish | charm | cloverfish | horseshoe | leprechaunfish | rabbit's foot | shamrockfish"
 	};
 	
 	private static final String[] FISH_ADJ_HLWN = new String[] {
-		"<adj_h> ::= 2spooky | apparitional | bloodcurling | creepy | cryptic | demonic | eerie | ghastly | ghostly | haunted | mummified | mysterious | scary | skeletal | spectral | spine-chilling | spooky | supernatural | undead | voodoo-cursed | zombie",
+		"<adj_h> ::= 2spooky | apparitional | bloodcurling | creepy | cryptic | Death's own | demonic | eerie | ghastly | ghostly | haunted | mummified | mysterious | scary | skeletal | spectral | spine-chilling | spooky | supernatural | undead | voodoo-cursed | zombie",
 		"<fish_h> ::= bonefish | corpsefish | demonfish | devilfish | exorcistfish | ghostfish | horrorfish | mummyfish | shadowfish | skeletonfish | skullfish | thirteenth hour | vampirefish | witchfish | zombiefish",
-		
 	};
 	
 	private static final String[] FISH_ADJ_XMAS = new String[] {
 		
-		"<adj_h> ::= chilly | festive | frosty | gift-giving | happy | icy | jingling | jolly | merry | naughty | nice | nippy | snowy | red-nosed | wintry",
+		"<adj_h> ::= chilly | festive | frosty | gift-giving | happy | icy | jingling | jolly | merry | naughty | nice | nippy | Santa's own | snowy | red-nosed | wintry",
 		"<fish_h> ::= Christmasfish | elffish | iciclefish | Grinchfish | jinglefish | ornamentfish | presentfish | reindeerfish | Santafish | Scroogefish | sleighfish | snowfish | snowmanfish | tinselfish | winterfish"
 	};
 	
@@ -72,22 +71,24 @@ public class FishGrammars {
 	public static enum Holiday {
 		
 		/**
-		 * Valentine's Day
+		 * St. Valentine's Day
 		 */
 		VALENTINE,
 		
+		/**
+		 * St. Patrick's Day
+		 */
+		PATRICK,
 		
 		/**
 		 * Halloween
 		 */
 		HALLOWEEN,
 		
-		
 		/**
 		 * Christmas
 		 */
 		CHRISTMAS,
-		
 		
 		/**
 		 * No particular holiday
@@ -105,6 +106,9 @@ public class FishGrammars {
 		switch (h) {
 		case VALENTINE:
 			grammar = concat(FISH_GRAMMAR_HOLIDAY, FISH_ADJ_VLTN);
+			break;
+		case PATRICK:
+			grammar = concat(FISH_GRAMMAR_HOLIDAY, FISH_ADJ_PTRK);
 			break;
 		case HALLOWEEN:
 			grammar = concat(FISH_GRAMMAR_HOLIDAY, FISH_ADJ_HLWN);
