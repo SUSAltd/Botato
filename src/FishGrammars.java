@@ -9,7 +9,7 @@ import java.util.Arrays;
 public class FishGrammars {
 	
 	private static final String[] FISH_AND_ADJECTIVES = new String[] {
-		"<adj> ::= amazing | armoured | awkward | beached | bigeye | blanched | chocolate-covered | cool | dangerous | dead | delirious | despicable | dirty | electric | electronic | explosive | expressive | fabulous | fallacious | flawless | frozen | genetically modified | glass | glow-in-the-dark | glowing | greedy | gregarious | hairy | insidious | jocular | keen | lazy | leopard-spotted | literary | lovely | magical | metal | musical | normal | nosey | noxious | one-legged | oppressed | optimal | oxidized | pampered | peaceful | poisonous | professional | quintessential | radiant | radioactive | red-hot | resplendent | rich | robotic | scaly | scorched | scorching | secret | self-cleaning | sharp | shiny | slippery | slithering | smoked | sophisticated | spike-tailed | spiky | steamed | steaming | three-legged | toothed | unanimous | uncomfortable | unique | volatile | wicked | wiggly | winged | wise | yellowish | zealous",
+		"<adj> ::= amazing | armoured | awkward | beached | bigeye | blanched | chocolate-covered | cool | crunchy | dangerous | dead | delirious | despicable | dirty | electric | electronic | explosive | expressive | fabulous | fallacious | fishy | flawless | frozen | genetically modified | glass | glow-in-the-dark | glowing | greedy | gregarious | hairy | holy | insidious | jocular | keen | lazy | leopard-spotted | literary | lovely | magical | metal | musical | normal | nosey | noxious | one-legged | oppressed | optimal | oxidized | pampered | peaceful | poisonous | professional | quintessential | radiant | radioactive | red-hot | resplendent | rich | robotic | scaly | scorched | scorching | secret | self-cleaning | sharp | shiny | slimy | slippery | slithering | smoked | sophisticated | spike-tailed | spiky | squishy | steamed | steaming | stinky | three-legged | toothed | unanimous | uncomfortable | unique | volatile | wicked | wiggly | winged | wise | yellowish | zealous",
 		"<adj_big> ::= big | big-boned | bloated | bulky | burly | capacious | chubby | colossal | commodious | enormous | fat | gargantuan | gigantic | ginormous | heavy | heavyweight | hefty | huge | hulking | humongous | immense | jumbo | massive | mega | muscly | oversized | prodigious | sizable | substantial | super-colossal | tremendous | voluminous | well-endowed | whopper",
 		"<adj_sml> ::= baby | diminutive | eensy-weensy | gaunt | gimpy | inconsiderable amount of | itsy-bitsy | light-weight | little | malnourished | miniature | newborn | petite | puny | skinny | small | teeny | tiny | tiny baby",
 		
@@ -33,8 +33,8 @@ public class FishGrammars {
 	};
 	
 	private static final String[] FISH_ADJ_HLWN = new String[] {
-		"<adj_h> ::= 2spooky | apparitional | bloodcurling | creepy | cryptic | Death's own | demonic | eerie | ghastly | ghostly | haunted | mummified | mysterious | scary | skeletal | spectral | spine-chilling | spooky | supernatural | undead | voodoo-cursed | zombie",
-		"<fish_h> ::= bonefish | corpsefish | demonfish | devilfish | exorcistfish | ghostfish | horrorfish | mummyfish | shadowfish | skeletonfish | skullfish | thirteenth hour | vampirefish | witchfish | zombiefish",
+		"<adj_h> ::= 2spooky | apparitional | bloodcurling | chilling | creepy | cryptic | Death's own | demonic | eerie | ghastly | ghostly | haunted | horrific | mummified | mysterious | scary | skeletal | spectral | spine-chilling | spooky | spooky scary | supernatural | undead | voodoo-cursed | zombie",
+		"<fish_h> ::= bonefish | corpsefish | demonfish | devilfish | exorcistfish | ghostfish | horrorfish | mummyfish | shadowfish | shiver down the spine | skeletonfish | skullfish | thirteenth hour | vampirefish | witchfish | zombiefish",
 	};
 	
 	private static final String[] FISH_ADJ_XMAS = new String[] {
