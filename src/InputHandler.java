@@ -62,7 +62,7 @@ public class InputHandler {
 				String command = message.substring(prefix.length());
 				
 				// maxFishers
-				if (command.matches("maxfishers \\d+")) {
+				if (command.matches("max_fishers \\d+")) {
 					String n = command.substring(command.indexOf(' ') + 1);
 					int num = Integer.parseInt(n);
 					
@@ -71,7 +71,7 @@ public class InputHandler {
 							"Maximum number of fishers changed to " + num);
 				
 				// maxReelWait
-				} else if (command.matches("maxreelwait \\d+")) {
+				} else if (command.matches("reel_wait_time \\d+")) {
 					String n = command.substring(command.indexOf(' ') + 1);
 					int num = Integer.parseInt(n);
 					
@@ -81,16 +81,16 @@ public class InputHandler {
 							" sec");
 				
 				// impatience
-				} else if (command.matches("impatience \\d+")) {
+				} else if (command.matches("failed_tries_limit \\d+")) {
 					String n = command.substring(command.indexOf(' ') + 1);
 					int num = Integer.parseInt(n);
 					
 					fh.setImpatienceLimit(num);
 					bot.sendMessage(sender, 
-							"Impatience limit changed to " + num + " tries");
+							"Failed tries limit changed to " + num + " tries");
 				}
 				
-			// say stuff
+			// save stuff
 			} else if (message.equals("save")) {
 				try {
 					fh.saveFish();

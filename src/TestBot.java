@@ -39,13 +39,19 @@ public class TestBot extends PircBot {
 		while (!isConnected && count < 60) { // makes 60 attempts to reconnect
 			count++;
 			System.out.println("Attempting to reconnect: attempt #" + count);
-			try {
 				// try to reconnect every thirty seconds
-				main(null);
-				Thread.sleep(1000 * 30);
-			} catch (IOException | InterruptedException e) {
-				// nothing I guess
-			}
+				try {
+					main(null);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				try {
+					Thread.sleep(1000 * 30);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}
 	}
 
@@ -113,6 +119,7 @@ public class TestBot extends PircBot {
 		isConnected = true;
 		ih.refreshCommands();
 
+		bot.identify("piiscool");
 		bot.joinChannel(channel);
 	}
 	
