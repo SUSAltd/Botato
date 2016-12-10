@@ -3,10 +3,14 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="lib" path="lib/pircbot.jar"/>
-	<classpathentry kind="lib" path="D:/My Stuff/Dropbox/code/java/Susalium/lib/opencsv-2.3.jar" sourcepath="D:/My Stuff/Dropbox/code/java/Susalium/lib/src">
+	<classpathentry kind="lib" path="lib/httpcore-4.1.4.jar"/>
+	<classpathentry kind="lib" path="lib/httpclient-4.1.3.jar"/>
+	<classpathentry kind="lib" path="lib/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/jsch-0.1.51.jar" sourcepath="lib/jsch/src">
 		<attributes>
-			<attribute name="javadoc_location" value="http://opencsv.sourceforge.net/apidocs/"/>
+			<attribute name="javadoc_location" value="https://epaul.github.io/jsch-documentation/javadoc/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/org.json-20120521.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

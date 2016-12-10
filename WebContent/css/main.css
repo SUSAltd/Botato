@@ -1,0 +1,53 @@
+/*
+	general elements
+*/
+
+body {
+	font-size: 14px;
+	font-style: 'Arial', sans-serif;
+}
+
+th:hover {
+	background-color: #E5E5E5;
+}
+
+/* table, td, th {
+	border: 1px solid black;
+} */
+
+/* td, th {
+	padding: 3px 5px;
+} */
+
+/* th {
+	background-color: #E0E0E0;
+	cursor: default;
+}
+
+tr:nth-child(even) {
+	background-color: #F1F1F1;
+} */
+
+
+/*
+	specific classes
+*/
+
+.fish-table {
+	font-size: 12px;
+}
+
+.optional {
+	display: none;
+}
+
+.sortable {
+	cursor: pointer;
+}
+
+/* Small devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+	.optional {
+		display: table-cell;
+	}
+}
